@@ -1,0 +1,165 @@
+:root {
+  --primary-blue: #4a90e2;
+  --dark-blue: #357ABD;
+}
+
+/* FULL SCREEN */
+.register-container {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* LEFT SIDE */
+.register-left {
+  flex: 1;
+  background:
+    linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)),
+    url('/images/reg.jpg') no-repeat center center;
+  background-size: cover;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.register-left h1 {
+  font-size: 5rem;
+  color: rgba(255,255,255,0.6);
+}
+
+.register-left p {
+  color: rgba(255,255,255,0.7);
+  font-size: 1.4rem;
+}
+
+/* RIGHT SIDE */
+.register-right {
+  flex: 1;
+  background: linear-gradient(to bottom, #cce0ff, #ffffff);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* COLLAGE */
+.collage {
+  position: relative;
+  width: 100%;
+  height: 500px;
+}
+
+.collage-img {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  object-fit: cover;
+  position: absolute;
+  border: 4px solid white;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  transition: 0.3s;
+}
+
+.collage-img:hover {
+  transform: scale(1.2) rotate(10deg);
+}
+
+/* POSITIONS */
+.collage-img:nth-child(1) { top: 40px; left: 5%; }
+.collage-img:nth-child(2) { top: 200px; left: 20%; }
+.collage-img:nth-child(3) { top: 20px; left: 50%; }
+.collage-img:nth-child(4) { top: 220px; left: 70%; }
+.collage-img:nth-child(5) { top: 120px; left: 40%; }
+
+/* BUTTONS */
+.role-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  margin-top: 2rem;
+}
+
+.role-buttons button {
+  padding: 1.2rem 3rem;
+  font-size: 1.2rem;
+  border-radius: 40px;
+  border: none;
+  cursor: pointer;
+  color: white;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+/* Student button */
+.role-buttons button:first-child {
+  background: linear-gradient(135deg, #6fa6ce, #33dae9);
+}
+
+/* Tutor button */
+.role-buttons button:last-child {
+  background: linear-gradient(135deg, #4a90e2, #357ABD);
+}
+
+.role-buttons button:hover {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 12px 25px rgba(0,0,0,0.3);
+}
+
+.role-buttons button:active {
+  transform: scale(0.95);
+}
+
+/* FORM CARD */
+.register-card {
+  width: 100%;
+  max-width: 400px;
+  background: white;
+  padding: 3rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.register-card input {
+  width: 100%;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.register-card button {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #4a90e2, #50e3c2);
+  color: white;
+  border: none;
+  border-radius: 8px;
+}
+
+.error {
+  color: red;
+  margin-bottom: 1rem;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .register-container {
+    flex-direction: column;
+  }
+
+  .register-left {
+    height: 30vh;
+  }
+
+  .register-right {
+    height: 70vh;
+  }
+
+  .collage-img {
+    width: 100px;
+    height: 100px;
+  }
+}
+
