@@ -87,6 +87,25 @@ body {
   box-shadow: 0 5px 15px rgba(74,144,226,0.3);
 }
 
+.auth-btn.login,
+button.auth-btn.login {
+  border: 1px solid var(--primary-blue);
+  color: var(--primary-blue);
+  background: transparent;
+  font-family: inherit;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.auth-btn.login:hover,
+button.auth-btn.login:hover {
+  background: var(--primary-blue);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(74,144,226,0.3);
+}
 .auth-btn.register {
   background: linear-gradient(135deg, #4a90e2, #357ABD);
   color: white;

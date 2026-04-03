@@ -5,17 +5,23 @@ import "./Register.css";
 export default function Register() {
   const [step, setStep] = useState(1);
   const [role, setRole] = useState("");
-  const [form, setForm] = useState({ name: "", email: "", password: "", role: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "" }); // role handled separately
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
+  // Move to step 2 and set role
   const nextStep = (selectedRole) => {
     setRole(selectedRole);
-    setForm({ ...form, role: selectedRole });
     setStep(2);
+    setError("");
   };
 
+  // Submit form to backend
   const submit = async () => {
-    if (!form.name || !form.email || !form.password) {
+    setError("");
+
+    // Form validation
+    if (!form.name || !form.email || !form.password || !role) {
       setError("All fields are required.");
       return;
     }
@@ -31,12 +37,20 @@ export default function Register() {
       return;
     }
 
+    const fullForm = { ...form, role }; // ensure role is included
+    console.log("Submitting:", fullForm); // log data for debugging
+
     try {
-      await API.post("/auth/register", form);
+      setLoading(true);
+      const res = await API.post("/auth/register", fullForm);
+      console.log("Response:", res.data);
       alert("Registered successfully!");
       window.location.href = "/login";
     } catch (err) {
+      console.error("Backend error:", err.response?.data || err.message);
       setError(err.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -56,16 +70,14 @@ export default function Register() {
           <div className="role-selection">
             <h2>Join as Student or Tutor</h2>
 
-            {/* BIG COLLAGE */}
             <div className="collage">
-              <img src="/images/slide1.jpg" className="collage-img" />
-              <img src="/images/slide2.jpg" className="collage-img" />
-              <img src="/images/slide3.jpg" className="collage-img" />
-              <img src="/images/slide4.jpg" className="collage-img" />
-              <img src="/images/slide5.jpg" className="collage-img" />
+              <img src="/images/slide1.jpg" className="collage-img" alt="Slide 1"/>
+              <img src="/images/slide2.jpg" className="collage-img" alt="Slide 2"/>
+              <img src="/images/slide3.jpg" className="collage-img" alt="Slide 3"/>
+              <img src="/images/slide4.jpg" className="collage-img" alt="Slide 4"/>
+              <img src="/images/slide5.jpg" className="collage-img" alt="Slide 5"/>
             </div>
 
-            {/* STYLISH BUTTONS */}
             <div className="role-buttons">
               <button onClick={() => nextStep("student")}>Student</button>
               <button onClick={() => nextStep("tutor")}>Tutor</button>
@@ -80,22 +92,29 @@ export default function Register() {
             {error && <div className="error">{error}</div>}
 
             <input
+              type="text"
               placeholder="Full Name"
+              value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
 
             <input
+              type="email"
               placeholder="Email"
+              value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
 
             <input
               type="password"
               placeholder="Password"
+              value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
             />
 
-            <button onClick={submit}>Register</button>
+            <button onClick={submit} disabled={loading}>
+              {loading ? "Registering..." : "Register"}
+            </button>
           </div>
         )}
 

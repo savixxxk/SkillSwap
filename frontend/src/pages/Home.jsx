@@ -5,6 +5,7 @@ import "./Home.css";
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [current, setCurrent] = useState(0);
+  const [user, setUser] = useState(null); // track logged-in user
 
   const images = [
     "/images/slide6.jpg",
@@ -14,12 +15,18 @@ export default function Home() {
     "/images/slide10.jpg"
   ];
 
+  // Slideshow
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % images.length);
     }, 3000);
-
     return () => clearInterval(interval);
+  }, []);
+
+  // Check if user is logged in
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) setUser(JSON.parse(storedUser));
   }, []);
 
   return (
@@ -31,18 +38,36 @@ export default function Home() {
           <img src="/images/logo.jpg" alt="logo" />
           <h1>SkillSwap</h1>
         </div>
-      <div className="header-quote">
-        
-      "𝒪𝓃𝒸𝑒 𝓎𝑜𝓊 𝓈𝓉𝑜𝓅 𝓁𝑒𝒶𝓇𝓃𝒾𝓃𝑔, 𝓎𝑜𝓊 𝓈𝓉𝒶𝓇𝓉 𝒹𝓎𝒾𝓃𝑔." — 𝒜𝓁𝒷𝑒𝓇𝓉 𝐸𝒾𝓃𝓈𝓉𝑒𝒾𝓃
-  
-      </div>
+        <div className="header-quote">
+          "𝒪𝓃𝒸𝑒 𝓎𝑜𝓊 𝓈𝓉𝑜𝓅 𝓁𝑒𝒶𝓇𝓃𝒾𝓃𝑔, 𝓎𝑜𝓊 𝓈𝓉𝒶𝓇𝓉 𝒹𝓎𝒾𝓃𝑔." — 𝒜𝓁𝒷𝑒𝓇𝓉 𝐸𝒾𝓃𝓈𝓉𝑒𝒾𝓃
+        </div>
+
+        {/* CONDITIONAL LOGIN/SIGNUP */}
         <div className="auth-section">
-          <NavLink to="/login" className="auth-btn login">
-            Login
-          </NavLink>
-          <NavLink to="/register" className="auth-btn register">
-            Sign-up
-          </NavLink>
+          {user ? (
+            <>
+              <span>Welcome, {user.name}</span>
+              <button
+                className="auth-btn login"
+                onClick={() => {
+                  localStorage.removeItem("user");
+                  setUser(null);
+                  window.location.reload();
+                }}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <NavLink to="/login" className="auth-btn login">
+                Login
+              </NavLink>
+              <NavLink to="/register" className="auth-btn login">
+                Sign-up
+              </NavLink>
+            </>
+          )}
         </div>
       </header>
 
@@ -105,8 +130,6 @@ export default function Home() {
       {/* HERO / SLIDESHOW */}
       <section className="hero-section">
         <img src={images[current]} alt="Slideshow" />
-
-        {/* Overlay text so it doesn’t feel empty */}
         <div className="hero-overlay">
           <h1>SkillSwap</h1>
           <p>Learn from the best. Teach your skills.</p>
@@ -114,31 +137,31 @@ export default function Home() {
       </section>
 
       {/* FEATURES */}
-<div className="features-grid">
-  <div className="feature-card image-card">
-    <img src="/images/tutor.jpg" alt="Certified Tutors" />
-    <div className="card-overlay">
-      <h3>Certified Tutors</h3>
-      <p>Only qualified tutors can teach.</p>
-    </div>
-  </div>
+      <div className="features-grid">
+        <div className="feature-card image-card">
+          <img src="/images/tutor.jpg" alt="Certified Tutors" />
+          <div className="card-overlay">
+            <h3>Certified Tutors</h3>
+            <p>Only qualified tutors can teach.</p>
+          </div>
+        </div>
 
-  <div className="feature-card image-card">
-    <img src="/images/progress.jpg" alt="Track Progress" />
-    <div className="card-overlay">
-      <h3>Track Progress</h3>
-      <p>Visual roadmap for student learning.</p>
-    </div>
-  </div>
+        <div className="feature-card image-card">
+          <img src="/images/progress.jpg" alt="Track Progress" />
+          <div className="card-overlay">
+            <h3>Track Progress</h3>
+            <p>Visual roadmap for student learning.</p>
+          </div>
+        </div>
 
-  <div className="feature-card image-card">
-    <img src="/images/sheduling.jpg" alt="Flexible Scheduling" />
-    <div className="card-overlay">
-      <h3>Flexible Scheduling</h3>
-      <p>Book sessions anytime.</p>
-    </div>
-  </div>
-</div>
+        <div className="feature-card image-card">
+          <img src="/images/sheduling.jpg" alt="Flexible Scheduling" />
+          <div className="card-overlay">
+            <h3>Flexible Scheduling</h3>
+            <p>Book sessions anytime.</p>
+          </div>
+        </div>
+      </div>
 
       {/* CONTACT */}
       <section className="contact-section">

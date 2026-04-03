@@ -21,12 +21,12 @@ export default function Login() {
     try {
       const res = await API.post("/auth/login", form);
       localStorage.setItem("user", JSON.stringify(res.data.user));
-      window.location.href = "/dashboard";
+      window.location.href = "/";
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     }
   };
-
+  
   return (
     <div className="login-container">
 
