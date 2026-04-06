@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import "./Register.css";
 
 export default function Register() {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [role, setRole] = useState("");
   const [form, setForm] = useState({ name: "", email: "", password: "" }); // role handled separately
@@ -37,15 +39,20 @@ export default function Register() {
       return;
     }
 
-    const fullForm = { ...form, role }; // ensure role is included
-    console.log("Submitting:", fullForm); // log data for debugging
+    const fullForm = { ...form, role };
 
     try {
       setLoading(true);
       const res = await API.post("/auth/register", fullForm);
-      console.log("Response:", res.data);
-      alert("Registered successfully!");
-      window.location.href = "/login";
+      const { user, token } = res.data;
+      if (user) localStorage.setItem("user", JSON.stringify(user));
+      if (token) localStorage.setItem("token", token);
+
+      if (role === "tutor") {
+        navigate("/tutor/certification", { replace: true });
+      } else {
+        navigate("/", { replace: true });
+      }
     } catch (err) {
       console.error("Backend error:", err.response?.data || err.message);
       setError(err.response?.data?.message || "Registration failed");

@@ -1,11 +1,12 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "./Home.css";
 
 export default function Home() {
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [current, setCurrent] = useState(0);
-  const [user, setUser] = useState(null); // track logged-in user
+  const [user, setUser] = useState(null);
 
   const images = [
     "/images/slide6.jpg",
@@ -23,11 +24,23 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // Check if user is logged in
+  // Get user from localStorage; uncertified tutors finish certification first
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (storedUser) setUser(JSON.parse(storedUser));
-  }, []);
+    if (!storedUser) return;
+    const parsed = JSON.parse(storedUser);
+    setUser(parsed);
+    if (parsed.role === "tutor" && !parsed.certifiedTutor) {
+      navigate("/tutor/certification", { replace: true });
+    }
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    setUser(null);
+    window.location.href = "/";
+  };
 
   return (
     <div className="home-container">
@@ -38,23 +51,19 @@ export default function Home() {
           <img src="/images/logo.jpg" alt="logo" />
           <h1>SkillSwap</h1>
         </div>
+
         <div className="header-quote">
           "𝒪𝓃𝒸𝑒 𝓎𝑜𝓊 𝓈𝓉𝑜𝓅 𝓁𝑒𝒶𝓇𝓃𝒾𝓃𝑔, 𝓎𝑜𝓊 𝓈𝓉𝒶𝓇𝓉 𝒹𝓎𝒾𝓃𝑔." — 𝒜𝓁𝒷𝑒𝓇𝓉 𝐸𝒾𝓃𝓈𝓉𝑒𝒾𝓃
         </div>
 
-        {/* CONDITIONAL LOGIN/SIGNUP */}
         <div className="auth-section">
           {user ? (
             <>
-              <span>Welcome, {user.name}</span>
-              <button
-                className="auth-btn login"
-                onClick={() => {
-                  localStorage.removeItem("user");
-                  setUser(null);
-                  window.location.reload();
-                }}
-              >
+              <span className="header-welcome">
+                Welcome,{" "}
+                <span className="header-welcome-name">{user.name}</span>
+              </span>
+              <button className="auth-btn login" onClick={handleLogout}>
                 Logout
               </button>
             </>
@@ -71,63 +80,103 @@ export default function Home() {
         </div>
       </header>
 
-      {/* NAVBAR */}
-      <nav className={`navbar ${menuOpen ? "active" : ""}`}>
-        <div
-          className="menu-toggle"
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          ☰
-        </div>
+      {/* Logged-in students & certified tutors only — guests: header only */}
+      {user &&
+        (user.role === "student" ||
+          (user.role === "tutor" && user.certifiedTutor)) && (
+        <nav className={`navbar ${menuOpen ? "active" : ""}`}>
+          <div
+            className="menu-toggle"
+            onClick={() => setMenuOpen(!menuOpen)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) =>
+              e.key === "Enter" && setMenuOpen((o) => !o)
+            }
+            aria-label="Toggle menu"
+          >
+            ☰
+          </div>
 
-        <ul className="nav-links">
-          <li>
-            <NavLink
-              to="/dashboard"
-              className={({ isActive }) =>
-                isActive ? "nav-item active" : "nav-item"
-              }
-            >
-              Tutor Dashboard
-            </NavLink>
-          </li>
+          <ul className="nav-links">
+            {user.role === "student" && (
+              <>
+                <li>
+                  <NavLink
+                    to="/search"
+                    className={({ isActive }) =>
+                      isActive ? "nav-item active" : "nav-item"
+                    }
+                  >
+                    Search
+                  </NavLink>
+                </li>
 
-          <li>
-            <NavLink
-              to="/profiles"
-              className={({ isActive }) =>
-                isActive ? "nav-item active" : "nav-item"
-              }
-            >
-              Student Profiles
-            </NavLink>
-          </li>
+                <li>
+                  <NavLink
+                    to="/games"
+                    className={({ isActive }) =>
+                      isActive ? "nav-item active" : "nav-item"
+                    }
+                  >
+                    Games
+                  </NavLink>
+                </li>
 
-          <li>
-            <NavLink
-              to="/games"
-              className={({ isActive }) =>
-                isActive ? "nav-item active" : "nav-item"
-              }
-            >
-              Games
-            </NavLink>
-          </li>
+                <li>
+                  <NavLink
+                    to="/student-profile"
+                    className={({ isActive }) =>
+                      isActive ? "nav-item active" : "nav-item"
+                    }
+                  >
+                    Student Profile
+                  </NavLink>
+                </li>
 
-          <li>
-            <NavLink
-              to="/booking"
-              className={({ isActive }) =>
-                isActive ? "nav-item active" : "nav-item"
-              }
-            >
-              Session Booking
-            </NavLink>
-          </li>
-        </ul>
-      </nav>
+                <li>
+                  <NavLink
+                    to="/booking"
+                    className={({ isActive }) =>
+                      isActive ? "nav-item active" : "nav-item"
+                    }
+                  >
+                    Session Booking
+                  </NavLink>
+                </li>
+              </>
+            )}
 
-      {/* HERO / SLIDESHOW */}
+            {user.role === "tutor" && user.certifiedTutor && (
+              <>
+                <li>
+                  <NavLink
+                    to="/dashboard"
+                    className={({ isActive }) =>
+                      isActive ? "nav-item active" : "nav-item"
+                    }
+                    end
+                  >
+                    Tutor Dashboard
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to="/search"
+                    className={({ isActive }) =>
+                      isActive ? "nav-item active" : "nav-item"
+                    }
+                  >
+                    Search
+                  </NavLink>
+                </li>
+              </>
+            )}
+          </ul>
+        </nav>
+        )}
+
+      {/* HERO */}
       <section className="hero-section">
         <img src={images[current]} alt="Slideshow" />
         <div className="hero-overlay">

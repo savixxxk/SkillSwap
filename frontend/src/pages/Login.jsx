@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import "./Login.css";
 
 export default function Login() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
 
@@ -20,8 +22,15 @@ export default function Login() {
 
     try {
       const res = await API.post("/auth/login", form);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      window.location.href = "/";
+      const { user, token } = res.data;
+      localStorage.setItem("user", JSON.stringify(user));
+      if (token) localStorage.setItem("token", token);
+
+      if (user.role === "tutor" && !user.certifiedTutor) {
+        navigate("/tutor/certification", { replace: true });
+      } else {
+        navigate("/", { replace: true });
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     }

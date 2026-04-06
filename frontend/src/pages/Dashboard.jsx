@@ -1,56 +1,178 @@
-import { useState } from "react";
-import { NavLink } from "react-router-dom";
-import { format, isSameDay, addMonths, subMonths } from "date-fns";
+import { useState, useEffect, useMemo, useReducer } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { format, addMonths, subMonths } from "date-fns";
+import axios from "axios";
+import API from "../services/api";
+import { sameLocalCalendarDay } from "../utils/sessionUtils";
 import "./Dashboard.css";
 
+const API_URL = "http://localhost:5000";
+
 export default function TutorDashboard() {
-  const [bio, setBio] = useState(
-    "Passionate about teaching programming and web development."
-  );
-  const [subjects] = useState("JavaScript, React, HTML/CSS"); // read-only
+  const navigate = useNavigate();
+  const [me, setMe] = useState(null);
+  const [subjectMap, setSubjectMap] = useState({});
+
+  useEffect(() => {
+    const raw = localStorage.getItem("user");
+    if (!raw) {
+      navigate("/login", { replace: true });
+      return;
+    }
+    try {
+      const u = JSON.parse(raw);
+      if (u.role !== "tutor") {
+        navigate("/", { replace: true });
+        return;
+      }
+      if (!u.certifiedTutor) {
+        navigate("/tutor/certification", { replace: true });
+        return;
+      }
+      setMe(u);
+      const token = localStorage.getItem("token");
+      if (token) {
+        API.get("/auth/me")
+          .then((res) => {
+            setMe(res.data.user);
+            localStorage.setItem("user", JSON.stringify(res.data.user));
+          })
+          .catch(() => {});
+      }
+    } catch {
+      navigate("/login", { replace: true });
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    axios
+      .get(`${API_URL}/auth/tutor/exam/subjects`)
+      .then((res) => {
+        const m = {};
+        (res.data.subjects || []).forEach((s) => {
+          m[s.id] = s.name;
+        });
+        setSubjectMap(m);
+      })
+      .catch(() => {});
+  }, []);
+
+  const teachingSubjectsLine = useMemo(() => {
+    if (!me?.teachingSubjects?.length) return "—";
+    return me.teachingSubjects.map((id) => subjectMap[id] || id).join(", ");
+  }, [me, subjectMap]);
+
+  const subjectLabel = (id) => subjectMap[id] || id;
+
+  const [bio, setBio] = useState("");
   const [editing, setEditing] = useState(false);
   const [profilePic, setProfilePic] = useState("/images/profile.jpg");
 
-  const [tempBio, setTempBio] = useState(bio);
+  const [tempBio, setTempBio] = useState("");
   const [tempPic, setTempPic] = useState(profilePic);
 
-  const [ratings] = useState([
-    { student: "Eva", rating: 5, feedback: "Great session!" },
-    { student: "Frank", rating: 4, feedback: "Very helpful." },
-  ]);
+  const [feedbackList, setFeedbackList] = useState([]);
 
-  const [sessionRequests, setSessionRequests] = useState([
-    { student: "Charlie", time: "2026-03-29T16:00", subject: "React", id: 1 },
-    { student: "Dana", time: "2026-03-30T11:00", subject: "HTML/CSS", id: 2 },
-  ]);
-
-  const [upcomingSessions, setUpcomingSessions] = useState([
-    { student: "Alice", time: "2026-03-27T10:00", subject: "React", id: 1 },
-    { student: "Bob", time: "2026-03-28T14:00", subject: "JavaScript", id: 2 },
-    { student: "Eve", time: "2026-03-28T16:00", subject: "HTML/CSS", id: 3 },
-    { student: "Charlie", time: "2026-03-20T11:00", subject: "React", id: 4 },
-  ]);
+  const [sessionRequests, setSessionRequests] = useState([]);
+  /** All accepted sessions (past + future) for the calendar */
+  const [calendarSessions, setCalendarSessions] = useState([]);
+  const [calendarVer, bumpCalendar] = useReducer((x) => x + 1, 0);
 
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
+  useEffect(() => {
+    if (!me?._id) return;
+
+    const fetchSessions = async () => {
+      try {
+        const res = await axios.get(
+          `${API_URL}/sessions/tutor/user/${me._id}`
+        );
+
+        const pending = res.data.filter((s) => s.status === "pending");
+        const accepted = res.data.filter((s) => s.status === "accepted");
+
+        setSessionRequests(pending);
+        setCalendarSessions(accepted);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchSessions();
+  }, [me?._id, calendarVer]);
+
+  useEffect(() => {
+    if (!me?._id) return;
+    const loadFeedback = () => {
+      axios
+        .get(`${API_URL}/sessions/tutor/user/${me._id}/feedbacks`)
+        .then((res) => setFeedbackList(res.data || []))
+        .catch(() => setFeedbackList([]));
+    };
+    loadFeedback();
+    const id = setInterval(loadFeedback, 30000);
+    return () => clearInterval(id);
+  }, [me?._id]);
+
   const handlePrevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
   const handleNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
 
-  const handleAccept = (id) => {
-    const session = sessionRequests.find((s) => s.id === id);
-    setUpcomingSessions([...upcomingSessions, session]);
-    setSessionRequests(sessionRequests.filter((s) => s.id !== id));
+  // ✅ ACCEPT → UPDATE DB
+  const handleAccept = async (id) => {
+    try {
+      const res = await axios.patch(
+        `${API_URL}/sessions/${id}/status`,
+        { status: "accepted" }
+      );
+
+      setCalendarSessions((prev) => [...prev, res.data]);
+      setSessionRequests((prev) => prev.filter((s) => s._id !== id));
+      bumpCalendar();
+
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleReject = (id) => {
-    setSessionRequests(sessionRequests.filter((s) => s.id !== id));
+  // ✅ REJECT → UPDATE DB
+  const handleReject = async (id) => {
+    try {
+      await axios.patch(
+        `${API_URL}/sessions/${id}/status`,
+        { status: "rejected" }
+      );
+
+      setSessionRequests((prev) => prev.filter((s) => s._id !== id));
+
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleSave = () => {
-    setBio(tempBio);
-    setProfilePic(tempPic);
-    setEditing(false);
+  useEffect(() => {
+    if (me?.bio !== undefined) {
+      const b = me.bio || "";
+      setBio(b);
+      setTempBio(b);
+    }
+  }, [me?.bio, me?._id]);
+
+  const handleSave = async () => {
+    try {
+      await API.patch("/auth/profile", { bio: tempBio });
+      const meRes = await API.get("/auth/me");
+      const u = meRes.data.user;
+      localStorage.setItem("user", JSON.stringify(u));
+      setMe(u);
+      setBio(tempBio);
+      setProfilePic(tempPic);
+      setEditing(false);
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Could not save profile");
+    }
   };
 
   const handleImageChange = (e) => {
@@ -68,11 +190,24 @@ export default function TutorDashboard() {
   };
 
   const sessionsByDate = (date) =>
-    upcomingSessions.filter((s) => isSameDay(new Date(s.time), date));
+    calendarSessions.filter((s) => sameLocalCalendarDay(s.time, date));
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    navigate("/", { replace: true });
+  };
+
+  if (!me) {
+    return (
+      <div className="dashboard-container">
+        <p className="dashboard-loading">Loading…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-container">
-      {/* HEADER */}
       <header className="top-header fixed-header">
         <div className="logo-section">
           <img src="/images/logo.jpg" alt="logo" />
@@ -80,19 +215,22 @@ export default function TutorDashboard() {
         </div>
         <div className="auth-section">
           <NavLink to="/" className="auth-btn login">Home</NavLink>
-          <NavLink to="/logout" className="auth-btn login">Logout</NavLink>
+          <button type="button" className="auth-btn login" onClick={handleLogout}>
+            Logout
+          </button>
         </div>
       </header>
 
-      {/* MAIN */}
       <main className="dashboard-scroll">
         <section className="dashboard-section">
+          
           {/* PROFILE */}
           <div className="profile-panel fill-left">
             <img src={profilePic} alt="profile" className="profile-pic" />
-            <h3>Your Profile</h3>
+            <h3 className="profile-display-name">{me.name}</h3>
+            <p className="profile-subtitle">Tutor profile</p>
             <p><strong>Bio:</strong> {bio}</p>
-            <p><strong>Subjects:</strong> {subjects}</p>
+            <p><strong>Subjects you teach:</strong> {teachingSubjectsLine}</p>
             <button className="edit-btn" onClick={() => setEditing(true)}>
               Edit Profile
             </button>
@@ -100,51 +238,87 @@ export default function TutorDashboard() {
 
           {/* RIGHT SIDE */}
           <div className="dashboard-right">
+
             {/* RATINGS */}
             <div className="dash-card">
               <h3>⭐ Ratings</h3>
-              {ratings.map((r, i) => (
-                <div key={i} className="rating-row">
+              {feedbackList.length === 0 && (
+                <p className="ratings-empty">No feedback yet from students.</p>
+              )}
+              {feedbackList.map((r) => (
+                <div key={r._id} className="rating-row">
                   <div className="rating-header">
                     <strong>{r.student}</strong>
+                    <span className="rating-subject">{subjectLabel(r.subject)}</span>
                     <div className="stars">
-                      {[1,2,3,4,5].map((star) => (
+                      {[1, 2, 3, 4, 5].map((star) => (
                         <span
                           key={star}
                           className={star <= r.rating ? "star filled" : "star"}
-                        >★</span>
+                        >
+                          ★
+                        </span>
                       ))}
                     </div>
                   </div>
-                  <span className="feedback">"{r.feedback}"</span>
+                  {r.feedback ? (
+                    <span className="feedback">&ldquo;{r.feedback}&rdquo;</span>
+                  ) : (
+                    <span className="feedback muted">No written comment</span>
+                  )}
+                  <div className="rating-date">
+                    {r.submittedAt
+                      ? format(new Date(r.submittedAt), "MMM d, yyyy")
+                      : ""}
+                  </div>
                 </div>
               ))}
             </div>
 
             {/* CALENDAR */}
             <div className="dash-card">
-              <h3>📅 Upcoming Sessions</h3>
+              <h3>📅 Session calendar</h3>
+              <p className="calendar-hint">
+                Accepted sessions appear on the day they are scheduled (local
+                time).
+              </p>
               <div className="calendar-header">
-                <button className="calendar-nav" onClick={handlePrevMonth}>◀</button>
+                <button
+                  type="button"
+                  className="edit-btn calendar-arrow-btn"
+                  onClick={handlePrevMonth}
+                  aria-label="Previous month"
+                >
+                  ◀
+                </button>
                 <span>{format(currentMonth, "MMMM yyyy")}</span>
-                <button className="calendar-nav" onClick={handleNextMonth}>▶</button>
+                <button
+                  type="button"
+                  className="edit-btn calendar-arrow-btn"
+                  onClick={handleNextMonth}
+                  aria-label="Next month"
+                >
+                  ▶
+                </button>
               </div>
+
               <div className="calendar-grid">
                 {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d => (
-                  <div key={d} className="calendar-day-header">{d}</div>
+                  <div key={d}>{d}</div>
                 ))}
-                {daysInMonth(currentMonth).map(day => {
+
+                {daysInMonth(currentMonth).map((day) => {
                   const sessions = sessionsByDate(day);
-                  const isPast = sessions.some(s => new Date(s.time) < new Date());
                   return (
-                    <div key={day} className="calendar-day"
-                      onClick={() => sessions.length && setSelectedDate(day)}>
+                    <div
+                      key={day.getTime()}
+                      className={sessions.length ? "calendar-day has-session" : "calendar-day"}
+                      onClick={() => sessions.length && setSelectedDate(day)}
+                    >
                       <span>{day.getDate()}</span>
-                      <div className="dots">
-                        {sessions.map((s,i) => (
-                          <span key={i} className={isPast ? "dot green" : "dot blue"} />
-                        ))}
-                      </div>
+                      {sessions.map((s,i) => (
+                        <span key={i} className="dot"></span>
+                      ))}
                     </div>
                   );
                 })}
@@ -154,75 +328,63 @@ export default function TutorDashboard() {
             {/* SESSION REQUESTS */}
             <div className="dash-card">
               <h3>📩 Session Requests</h3>
+
+              {sessionRequests.length === 0 && <p>No requests</p>}
+
               {sessionRequests.map(r => (
-                <div key={r.id} className="request-row">
+                <div key={r._id} className="request-row">
                   <div>
-                    <strong>{r.student}</strong>
+                    <strong>{r.studentName}</strong>
                     <p className="time">{format(new Date(r.time),"MMM dd, hh:mm a")}</p>
-                    <span>{r.subject}</span>
+                    <span>{subjectLabel(r.subject)}</span>
                   </div>
                   <div className="actions">
-                    <button className="accept-btn" onClick={()=>handleAccept(r.id)}>Accept</button>
-                    <button className="reject-btn" onClick={()=>handleReject(r.id)}>Reject</button>
+                    <button className="accept-btn" onClick={()=>handleAccept(r._id)}>Accept</button>
+                    <button className="reject-btn" onClick={()=>handleReject(r._id)}>Reject</button>
                   </div>
                 </div>
               ))}
             </div>
+
           </div>
         </section>
       </main>
 
-      {/* PROFILE EDIT MODAL */}
+      {/* MODALS remain EXACTLY SAME */}
       {editing && (
         <div className="modal-overlay">
-          <div className="modal-card profile-modal bigger-modal">
+          <div className="modal-card profile-modal bigger-modal profile-edit-modal">
             <h2>Edit Profile</h2>
-            <div className="profile-modal-content">
-              <div className="profile-pic-section">
-                <img src={tempPic} alt="preview" className="profile-pic large"/>
-                <input type="file" onChange={handleImageChange} />
-              </div>
-
-              <div className="profile-info-section">
-                <div className="profile-field">
-                  <label>Bio</label>
-                  <textarea value={tempBio} onChange={(e)=>setTempBio(e.target.value)}/>
-                </div>
-                <div className="profile-field">
-                  <label>Subjects</label>
-                  <input type="text" value={subjects} readOnly/>
-                </div>
-              </div>
-            </div>
-
-            <div className="modal-actions">
-              <button onClick={handleSave} className="save-btn gradient-btn">Save</button>
-              <button onClick={()=>setEditing(false)} className="cancel-btn gradient-btn">Cancel</button>
-            </div>
+            <label className="profile-edit-label" htmlFor="profile-bio-edit">
+              Bio
+            </label>
+            <textarea
+              id="profile-bio-edit"
+              className="profile-edit-bio"
+              value={tempBio}
+              onChange={(e) => setTempBio(e.target.value)}
+              rows={10}
+            />
+            <button type="button" className="edit-btn" onClick={handleSave}>
+              Save
+            </button>
           </div>
         </div>
       )}
 
-      {/* SESSION MODAL */}
       {selectedDate && (
         <div className="modal-overlay" onClick={()=>setSelectedDate(null)}>
-          <div className="modal-card" onClick={e=>e.stopPropagation()}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <h3>Sessions on {format(selectedDate,"MMM dd, yyyy")}</h3>
             {sessionsByDate(selectedDate).map(s=>(
-              <div key={s.id} className="session-popup-row">
-                <strong>{s.student}</strong>
-                <span>{s.subject}</span>
-                <span>{format(new Date(s.time),"hh:mm a")}</span>
+              <div key={s._id}>
+                <strong>{s.studentName}</strong>
+                <span>{subjectLabel(s.subject)}</span>
               </div>
             ))}
-            <button className="cancel-btn" onClick={()=>setSelectedDate(null)}>Close</button>
           </div>
         </div>
       )}
-
-      <footer className="home-footer fixed-footer">
-        © 2026 SkillSwap. All rights reserved.
-      </footer>
     </div>
   );
 }

@@ -63,12 +63,117 @@
      border-radius: 50%;
      margin-bottom: 1rem;
 }
+
+.profile-display-name {
+  margin: 0 0 0.25rem;
+  font-size: 1.35rem;
+  color: #1e3a5f;
+}
+
+.profile-subtitle {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.dashboard-loading {
+  margin: 6rem auto;
+  text-align: center;
+  color: #64748b;
+}
+
+.auth-section button.auth-btn {
+  font: inherit;
+  cursor: pointer;
+}
+
+.calendar-hint {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: -0.25rem 0 0.75rem;
+}
+
+.calendar-day {
+  min-height: 2.5rem;
+}
+
+.calendar-day.has-session {
+  cursor: pointer;
+  background: #f0f7ff;
+}
+
+.ratings-empty {
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.rating-subject {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: normal;
+  color: #64748b;
+  margin-top: 0.15rem;
+}
+
+.feedback.muted {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.rating-date {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-top: 0.35rem;
+}
  .edit-btn {
      background: #6fb7ff;
      color: white;
      padding: 0.6rem 1.2rem;
      border: none;
      border-radius: 6px;
+     cursor: pointer;
+     font: inherit;
+     font-weight: 600;
+     transition: filter 0.2s, transform 0.15s;
+}
+
+.edit-btn:hover {
+  filter: brightness(0.94);
+}
+
+.edit-btn:active {
+  transform: scale(0.98);
+}
+
+.calendar-arrow-btn {
+  padding: 0.4rem 0.85rem;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.profile-edit-modal .profile-edit-label {
+  display: block;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 0.4rem;
+  font-size: 0.95rem;
+}
+
+.profile-edit-modal .profile-edit-bio {
+  width: 100%;
+  min-height: 220px;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font: inherit;
+  line-height: 1.45;
+  resize: vertical;
+  box-sizing: border-box;
+  margin-bottom: 1rem;
+}
+
+.profile-edit-modal h2 {
+  margin-top: 0;
 }
 /* RIGHT */
  .dashboard-right {
@@ -221,15 +326,6 @@
   width: 700px;       
   max-width: 90%;
 }
- .calendar-nav {
-     background-color: #bfdbfe;
-    /* light blue */
-     border: none;
-     border-radius: 6px;
-     padding: 0.3rem 0.8rem;
-     cursor: pointer;
-     font-weight: bold;
-}
 /* CALENDAR */
  .calendar-header {
      display:flex;
@@ -273,15 +369,6 @@
 }
  .dot.green {
      background-color:#10b981;
-}
- .calendar-nav {
-     background-color: #bfdbfe;
-    /* light blue */
-     border: none;
-     border-radius: 6px;
-     padding: 0.3rem 0.8rem;
-     cursor: pointer;
-     font-weight: bold;
 }
 /* SESSION POPUP */
  .session-popup-row {

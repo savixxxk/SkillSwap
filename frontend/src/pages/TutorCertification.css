@@ -1,0 +1,159 @@
+.tutor-cert-page {
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #cce0ff, #ffffff);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem 1rem 4rem;
+  box-sizing: border-box;
+}
+
+.tutor-cert-panel {
+  width: 100%;
+  max-width: 640px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(74, 144, 226, 0.15);
+  padding: 2rem;
+}
+
+.tutor-cert-panel h1 {
+  margin: 0 0 0.5rem;
+  color: #357abd;
+  font-size: 1.75rem;
+}
+
+.tutor-cert-lead {
+  color: #444;
+  line-height: 1.5;
+  margin: 0 0 1.5rem;
+}
+
+.tutor-cert-loading {
+  text-align: center;
+  color: #357abd;
+  margin-top: 3rem;
+}
+
+.tutor-cert-error {
+  background: #ffe8e8;
+  color: #a32020;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.tutor-cert-section {
+  margin-bottom: 2rem;
+}
+
+.tutor-cert-section h2 {
+  font-size: 1.15rem;
+  color: #333;
+  margin: 0 0 1rem;
+}
+
+.tutor-cert-subject-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.tutor-cert-subject-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #c5d9f5;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.tutor-cert-subject-tile:has(input:checked) {
+  border-color: #4a90e2;
+  background: #eef6ff;
+}
+
+.tutor-cert-primary {
+  background: #4a90e2;
+  color: #fff;
+  border: none;
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.tutor-cert-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.tutor-cert-exam-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tutor-cert-exam-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.tutor-cert-badge.pass {
+  color: #1e7b34;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.tutor-cert-linkish {
+  background: none;
+  border: none;
+  color: #4a90e2;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 0.95rem;
+}
+
+.tutor-cert-back {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.tutor-cert-question {
+  margin-bottom: 1.25rem;
+}
+
+.tutor-cert-qtext {
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  color: #222;
+}
+
+.tutor-cert-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.tutor-cert-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.tutor-cert-exam-active {
+  margin-top: 0.5rem;
+}

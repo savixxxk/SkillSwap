@@ -1,0 +1,48 @@
+.cta-section {
+  background: linear-gradient(135deg, #0A1B38 0%, #1D4ED8 100%);
+  color: var(--white);
+  padding: 100px 0;
+  text-align: center;
+}
+
+.cta-title {
+  font-size: 56px;
+  line-height: 1.2;
+  margin-bottom: 24px;
+}
+
+.cta-subtitle {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 40px;
+}
+
+.cta-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.cta-primary-btn {
+  background-color: var(--accent-gold);
+  color: var(--dark-navy);
+  padding: 16px 32px;
+  font-size: 16px;
+}
+
+.cta-primary-btn:hover {
+  background-color: #EAA015; /* slightly darker gold */
+  box-shadow: 0 4px 12px rgba(245, 166, 35, 0.4);
+}
+
+.cta-outline-btn {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--white);
+  padding: 16px 32px;
+  font-size: 16px;
+}
+
+.cta-outline-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--white);
+}
