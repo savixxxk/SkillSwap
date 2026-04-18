@@ -62,7 +62,14 @@ export default function Login() {
       localStorage.setItem("token", response.data.token);
       navigate(getPostAuthPath(response.data.user), { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
+      const status = err.response?.status;
+      if (status === 503) {
+        setError(
+          "Database is offline. Start MongoDB or set MONGO_URI in backend/.env, then retry login.",
+        );
+      } else {
+        setError(err.response?.data?.message || "Login failed");
+      }
     } finally {
       setLoading(false);
     }
@@ -85,15 +92,22 @@ export default function Login() {
 
       <div className="w-full max-w-md z-10">
         <div className="text-center mb-10 relative">
-          <NavLink to="/" className="inline-flex mb-6 hover:opacity-90 transition-opacity relative z-10 justify-center">
+          <NavLink
+            to="/"
+            className="inline-flex mb-6 hover:opacity-90 transition-opacity relative z-10 justify-center"
+          >
             <img
               src="/images/logo.jpg"
               alt="SkillSwap"
               className="h-14 w-14 rounded-xl object-cover border border-white/20 shadow-lg"
             />
           </NavLink>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3 relative z-10 tracking-tight">Welcome Back</h1>
-          <p className="text-blue-100/90 text-base sm:text-lg relative z-10">Sign in — your account is stored securely in MongoDB via the API.</p>
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3 relative z-10 tracking-tight">
+            Welcome Back
+          </h1>
+          <p className="text-blue-100/90 text-base sm:text-lg relative z-10">
+            Sign in — your account is stored securely in MongoDB via the API.
+          </p>
         </div>
 
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 sm:p-10 space-y-6 shadow-2xl shadow-black/30">
@@ -104,7 +118,9 @@ export default function Login() {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-blue-100 mb-3">Email Address</label>
+            <label className="block text-sm font-medium text-blue-100 mb-3">
+              Email Address
+            </label>
             <input
               type="email"
               value={email}
@@ -116,11 +132,15 @@ export default function Login() {
                 emailError ? "border-red-400" : "border-white/15"
               }`}
             />
-            {emailError && <p className="mt-2 text-red-300 text-sm">{emailError}</p>}
+            {emailError && (
+              <p className="mt-2 text-red-300 text-sm">{emailError}</p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-blue-100 mb-3">Password</label>
+            <label className="block text-sm font-medium text-blue-100 mb-3">
+              Password
+            </label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -141,7 +161,9 @@ export default function Login() {
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
-            {passwordError && <p className="mt-2 text-red-300 text-sm">{passwordError}</p>}
+            {passwordError && (
+              <p className="mt-2 text-red-300 text-sm">{passwordError}</p>
+            )}
           </div>
 
           <button
@@ -149,18 +171,25 @@ export default function Login() {
             disabled={loading}
             className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-slate-500 disabled:to-slate-600 text-white font-semibold rounded-lg transition-all transform hover:scale-105 hover:shadow-lg shadow-md flex items-center justify-center gap-2"
           >
-            {loading ? "Signing in..." : "Sign In"} {!loading && <ArrowRight size={20} />}
+            {loading ? "Signing in..." : "Sign In"}{" "}
+            {!loading && <ArrowRight size={20} />}
           </button>
         </div>
 
         <div className="mt-8 text-center space-y-3">
           <p className="text-blue-100/85 text-sm sm:text-base">
             Don&apos;t have an account?{" "}
-            <NavLink to="/register" className="text-cyan-300 hover:text-cyan-200 font-semibold underline underline-offset-2">
+            <NavLink
+              to="/register"
+              className="text-cyan-300 hover:text-cyan-200 font-semibold underline underline-offset-2"
+            >
               Sign up
             </NavLink>
           </p>
-          <NavLink to="/" className="text-blue-200/80 hover:text-white text-sm transition-colors">
+          <NavLink
+            to="/"
+            className="text-blue-200/80 hover:text-white text-sm transition-colors"
+          >
             ← Back to home
           </NavLink>
         </div>

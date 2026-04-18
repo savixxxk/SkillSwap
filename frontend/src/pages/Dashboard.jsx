@@ -122,7 +122,6 @@ export default function TutorDashboard() {
       setCalendarSessions((prev) => [...prev, res.data]);
       setSessionRequests((prev) => prev.filter((s) => s._id !== id));
       bumpCalendar();
-
     } catch (err) {
       console.error(err);
     }
@@ -134,7 +133,6 @@ export default function TutorDashboard() {
       await API.patch(`/sessions/${id}/status`, { status: "rejected" });
 
       setSessionRequests((prev) => prev.filter((s) => s._id !== id));
-
     } catch (err) {
       console.error(err);
     }
@@ -168,9 +166,9 @@ export default function TutorDashboard() {
       console.error(err);
       alert(
         err.response?.data?.message ||
-        err.response?.statusText ||
-        err.message ||
-        "Could not save profile"
+          err.response?.statusText ||
+          err.message ||
+          "Could not save profile",
       );
     }
   };
@@ -198,6 +196,15 @@ export default function TutorDashboard() {
   const sessionsByDate = (date) =>
     calendarSessions.filter((s) => sameLocalCalendarDay(s.time, date));
 
+  const averageRating = useMemo(() => {
+    if (!feedbackList.length) return "0.0";
+    const total = feedbackList.reduce(
+      (sum, item) => sum + Number(item.rating || 0),
+      0,
+    );
+    return (total / feedbackList.length).toFixed(1);
+  }, [feedbackList]);
+
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
@@ -214,34 +221,71 @@ export default function TutorDashboard() {
 
   return (
     <div className="dashboard-container">
-      <header className="top-header fixed-header">
-        <div className="auth-section">
-          <NavLink to="/tutor-search" className="auth-btn login">Tutor Search</NavLink>
-          <NavLink to="/" className="auth-btn login">Home</NavLink>
-          <button type="button" className="auth-btn login" onClick={handleLogout}>
+      <main className="dashboard-scroll">
+        <div className="dashboard-top-actions">
+          <NavLink to="/tutor-search" className="dashboard-top-btn">
+            Tutor Search
+          </NavLink>
+          <NavLink to="/" className="dashboard-top-btn">
+            Home
+          </NavLink>
+          <button
+            type="button"
+            className="dashboard-top-btn"
+            onClick={handleLogout}
+          >
             Logout
           </button>
         </div>
-      </header>
 
-      <main className="dashboard-scroll">
+        <section className="dashboard-hero">
+          <div className="dashboard-hero-content">
+            <div className="dashboard-hero-text">
+              <h1>Welcome back, {me.name}</h1>
+              <p>
+                Manage your tutoring profile, sessions, and feedback in one
+                place.
+              </p>
+            </div>
+            <div className="dashboard-quick-stats">
+              <div className="dashboard-quick-stat">
+                <h3>{sessionRequests.length}</h3>
+                <p>Pending Requests</p>
+              </div>
+              <div className="dashboard-quick-stat">
+                <h3>{calendarSessions.length}</h3>
+                <p>Accepted Sessions</p>
+              </div>
+              <div className="dashboard-quick-stat">
+                <h3>{averageRating}</h3>
+                <p>Average Rating</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="dashboard-section">
-          
           {/* PROFILE */}
           <div className="profile-panel fill-left">
             <img src={profilePic} alt="profile" className="profile-pic" />
             <h3 className="profile-display-name">{me.name}</h3>
             <p className="profile-subtitle">Tutor profile</p>
-            <p><strong>Bio:</strong> {bio}</p>
-            <p><strong>Subjects you teach:</strong> {teachingSubjectsLine}</p>
-            <button className="edit-btn" onClick={() => setEditing(true)}>
+            <p className="profile-bio-block">
+              <strong>Bio:</strong> {bio}
+            </p>
+            <p className="profile-subjects-block">
+              <strong>Subjects you teach:</strong> {teachingSubjectsLine}
+            </p>
+            <button
+              className="edit-btn profile-edit-btn"
+              onClick={() => setEditing(true)}
+            >
               Edit Profile
             </button>
           </div>
 
           {/* RIGHT SIDE */}
           <div className="dashboard-right">
-
             {/* RATINGS */}
             <div className="dash-card">
               <h3>⭐ Ratings</h3>
@@ -252,7 +296,9 @@ export default function TutorDashboard() {
                 <div key={r._id} className="rating-row">
                   <div className="rating-header">
                     <strong>{r.student}</strong>
-                    <span className="rating-subject">{subjectLabel(r.subject)}</span>
+                    <span className="rating-subject">
+                      {subjectLabel(r.subject)}
+                    </span>
                     <div className="stars">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <span
@@ -306,7 +352,7 @@ export default function TutorDashboard() {
               </div>
 
               <div className="calendar-grid">
-                {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d => (
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
                   <div key={d}>{d}</div>
                 ))}
 
@@ -315,11 +361,15 @@ export default function TutorDashboard() {
                   return (
                     <div
                       key={day.getTime()}
-                      className={sessions.length ? "calendar-day has-session" : "calendar-day"}
+                      className={
+                        sessions.length
+                          ? "calendar-day has-session"
+                          : "calendar-day"
+                      }
                       onClick={() => sessions.length && setSelectedDate(day)}
                     >
                       <span>{day.getDate()}</span>
-                      {sessions.map((s,i) => (
+                      {sessions.map((s, i) => (
                         <span key={i} className="dot"></span>
                       ))}
                     </div>
@@ -334,21 +384,32 @@ export default function TutorDashboard() {
 
               {sessionRequests.length === 0 && <p>No requests</p>}
 
-              {sessionRequests.map(r => (
+              {sessionRequests.map((r) => (
                 <div key={r._id} className="request-row">
                   <div>
                     <strong>{r.studentName}</strong>
-                    <p className="time">{format(new Date(r.time),"MMM dd, hh:mm a")}</p>
+                    <p className="time">
+                      {format(new Date(r.time), "MMM dd, hh:mm a")}
+                    </p>
                     <span>{subjectLabel(r.subject)}</span>
                   </div>
                   <div className="actions">
-                    <button className="accept-btn" onClick={()=>handleAccept(r._id)}>Accept</button>
-                    <button className="reject-btn" onClick={()=>handleReject(r._id)}>Reject</button>
+                    <button
+                      className="accept-btn"
+                      onClick={() => handleAccept(r._id)}
+                    >
+                      Accept
+                    </button>
+                    <button
+                      className="reject-btn"
+                      onClick={() => handleReject(r._id)}
+                    >
+                      Reject
+                    </button>
                   </div>
                 </div>
               ))}
             </div>
-
           </div>
         </section>
       </main>
@@ -359,7 +420,11 @@ export default function TutorDashboard() {
           <div className="modal-card profile-modal bigger-modal profile-edit-modal">
             <h2>Edit Profile</h2>
             <div className="profile-photo-upload">
-              <img src={tempPic} alt="Preview" className="profile-photo-preview" />
+              <img
+                src={tempPic}
+                alt="Preview"
+                className="profile-photo-preview"
+              />
               <label className="profile-upload-label">
                 <input
                   type="file"
@@ -388,13 +453,16 @@ export default function TutorDashboard() {
       )}
 
       {selectedDate && (
-        <div className="modal-overlay" onClick={()=>setSelectedDate(null)}>
+        <div className="modal-overlay" onClick={() => setSelectedDate(null)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <h3>Sessions on {format(selectedDate,"MMM dd, yyyy")}</h3>
-            {sessionsByDate(selectedDate).map(s=>(
-              <div key={s._id}>
+            <h3>Sessions on {format(selectedDate, "MMM dd, yyyy")}</h3>
+            {sessionsByDate(selectedDate).map((s) => (
+              <div key={s._id} className="session-popup-row">
                 <strong>{s.studentName}</strong>
                 <span>{subjectLabel(s.subject)}</span>
+                <span className="session-popup-time">
+                  {format(new Date(s.time), "hh:mm a")}
+                </span>
               </div>
             ))}
           </div>

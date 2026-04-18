@@ -2,6 +2,7 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import User from "../models/User.js";
 import { requireAuth } from "../middleware/auth.js";
 import {
@@ -14,17 +15,24 @@ import {
 
 const router = express.Router();
 
+function isDbReady() {
+  return mongoose.connection.readyState === 1;
+}
+
+function dbUnavailableMessage() {
+  return "Database is unavailable. Start MongoDB locally or set MONGO_URI in backend/.env.";
+}
+
 function signToken(user) {
   return jwt.sign(
     { id: user._id, role: user.role },
     process.env.JWT_SECRET || "secretkey",
-    { expiresIn: "1d" }
+    { expiresIn: "1d" },
   );
 }
 
 function toPublicUser(userDoc) {
-  const o =
-    userDoc?.toObject?.() ?? userDoc?._doc ?? userDoc;
+  const o = userDoc?.toObject?.() ?? userDoc?._doc ?? userDoc;
   const { password: _p, ...userData } = o;
   return userData;
 }
@@ -50,8 +58,17 @@ function recomputeCertifiedTutor(user) {
 // POST /auth/register
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password, role, adminCode } = req.body;
-    if (!name || !email || !password || !role) {
+    if (!isDbReady()) {
+      return res.status(503).json({
+        message: dbUnavailableMessage(),
+      });
+    }
+
+    const { name, email, password, role, adminCode } = req.body || {};
+    const normalizedEmail = String(email || "")
+      .trim()
+      .toLowerCase();
+    if (!name || !normalizedEmail || !password || !role) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -62,11 +79,13 @@ router.post("/register", async (req, res) => {
     if (role === "admin") {
       const requiredCode = process.env.ADMIN_REGISTRATION_CODE;
       if (!requiredCode || adminCode !== requiredCode) {
-        return res.status(403).json({ message: "Admin registration is restricted" });
+        return res
+          .status(403)
+          .json({ message: "Admin registration is restricted" });
       }
     }
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
@@ -74,7 +93,7 @@ router.post("/register", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({
       name,
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
       role,
       certifiedTutor: false,
@@ -100,15 +119,31 @@ router.post("/register", async (req, res) => {
 // use the same login; the app redirects them to finish certification before full access.
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password)
+    if (!isDbReady()) {
+      return res.status(503).json({
+        message: dbUnavailableMessage(),
+      });
+    }
+
+    const { email, password } = req.body || {};
+    const normalizedEmail = String(email || "")
+      .trim()
+      .toLowerCase();
+    if (!normalizedEmail || !password)
       return res.status(400).json({ message: "All fields are required" });
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user)
       return res.status(400).json({ message: "Invalid email or password" });
     if (user.isBlocked) {
-      return res.status(403).json({ message: "Your account has been blocked by an admin" });
+      return res
+        .status(403)
+        .json({ message: "Your account has been blocked by an admin" });
+    }
+
+    // Prevent internal errors for legacy/incomplete records with missing password hashes.
+    if (!user.password || typeof user.password !== "string") {
+      return res.status(400).json({ message: "Invalid email or password" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -167,31 +202,35 @@ router.put("/tutor/teaching-subjects", requireAuth, async (req, res) => {
 });
 
 // GET /auth/tutor/exam/:subjectId/questions
-router.get("/tutor/exam/:subjectId/questions", requireAuth, async (req, res) => {
-  try {
-    const user = await User.findById(req.userId);
-    if (!user || user.role !== "tutor" || user.certifiedTutor) {
-      return res.status(403).json({ message: "Not allowed" });
-    }
+router.get(
+  "/tutor/exam/:subjectId/questions",
+  requireAuth,
+  async (req, res) => {
+    try {
+      const user = await User.findById(req.userId);
+      if (!user || user.role !== "tutor" || user.certifiedTutor) {
+        return res.status(403).json({ message: "Not allowed" });
+      }
 
-    const { subjectId } = req.params;
-    if (!user.teachingSubjects?.includes(subjectId)) {
-      return res.status(403).json({
-        message: "This subject is not in your teaching selection",
-      });
-    }
+      const { subjectId } = req.params;
+      if (!user.teachingSubjects?.includes(subjectId)) {
+        return res.status(403).json({
+          message: "This subject is not in your teaching selection",
+        });
+      }
 
-    const questions = sanitizeQuestions(subjectId);
-    if (!questions) {
-      return res.status(404).json({ message: "Subject not found" });
-    }
+      const questions = sanitizeQuestions(subjectId);
+      if (!questions) {
+        return res.status(404).json({ message: "Subject not found" });
+      }
 
-    res.json({ subjectId, questions, passPercent: PASS_PERCENT });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
+      res.json({ subjectId, questions, passPercent: PASS_PERCENT });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Server error" });
+    }
+  },
+);
 
 // POST /auth/tutor/exam/submit
 router.post("/tutor/exam/submit", requireAuth, async (req, res) => {
@@ -203,7 +242,9 @@ router.post("/tutor/exam/submit", requireAuth, async (req, res) => {
 
     const { subjectId, answers } = req.body;
     if (!subjectId || !Array.isArray(answers)) {
-      return res.status(400).json({ message: "subjectId and answers required" });
+      return res
+        .status(400)
+        .json({ message: "subjectId and answers required" });
     }
 
     if (!user.teachingSubjects?.includes(subjectId)) {
@@ -260,7 +301,9 @@ router.patch("/profile", requireAuth, async (req, res) => {
       return res.status(400).json({ message: "Bio must be text" });
     }
     if (profilePic !== undefined && typeof profilePic !== "string") {
-      return res.status(400).json({ message: "Profile picture must be a URL or data URI" });
+      return res
+        .status(400)
+        .json({ message: "Profile picture must be a URL or data URI" });
     }
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ message: "User not found" });

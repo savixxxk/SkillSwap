@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import API from "../services/api";
@@ -83,13 +83,19 @@ export default function AdminDashboard() {
   const setBlocked = async (userId, nextBlocked) => {
     setBusyUserId(userId);
     try {
-      await API.patch(`/admin/users/${userId}/block`, { isBlocked: nextBlocked });
+      await API.patch(`/admin/users/${userId}/block`, {
+        isBlocked: nextBlocked,
+      });
       setUsers((prev) =>
-        prev.map((u) => (u._id === userId ? { ...u, isBlocked: nextBlocked } : u))
+        prev.map((u) =>
+          u._id === userId ? { ...u, isBlocked: nextBlocked } : u,
+        ),
       );
       setError("");
     } catch (err) {
-      setError(err.response?.data?.message || "Unable to update user block status.");
+      setError(
+        err.response?.data?.message || "Unable to update user block status.",
+      );
     } finally {
       setBusyUserId("");
     }
@@ -123,34 +129,103 @@ export default function AdminDashboard() {
         // logo is optional in case image loading fails in browser security contexts
       }
 
+      const pdfTitleMap = {
+        users: "SkillSwap Login Accounts Report",
+        ratings: "SkillSwap Tutor Ratings Report",
+        sessions: "SkillSwap Sessions Report",
+      };
       doc.setFontSize(18);
-      doc.text("SkillSwap Admin Report", 40, 18);
+      doc.text(pdfTitleMap[activeTab] || "SkillSwap Admin Report", 40, 18);
       doc.setFontSize(10);
       doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 25);
 
-      autoTable(doc, {
-        startY: 35,
-        head: [["Metric", "Value"]],
-        body: [
-          ["Total users", String(counts.totalUsers)],
-          ["Students", String(counts.students)],
-          ["Tutors", String(counts.tutors)],
-          ["Admins", String(counts.admins)],
-          ["Sessions", String(counts.sessions)],
-        ],
-      });
+      if (activeTab === "users") {
+        autoTable(doc, {
+          startY: 35,
+          head: [["Metric", "Value"]],
+          body: [
+            ["Total users", String(counts.totalUsers)],
+            ["Students", String(counts.students)],
+            ["Tutors", String(counts.tutors)],
+            ["Admins", String(counts.admins)],
+            [
+              "Blocked accounts",
+              String(users.filter((u) => u.isBlocked).length),
+            ],
+          ],
+        });
 
-      autoTable(doc, {
-        head: [["Name", "Email", "Role", "Blocked"]],
-        body: users.slice(0, 50).map((u) => [
-          u.name,
-          u.email,
-          u.role,
-          u.isBlocked ? "Yes" : "No",
-        ]),
-      });
+        autoTable(doc, {
+          head: [["Name", "Email", "Role", "Blocked", "Joined"]],
+          body: users
+            .slice(0, 80)
+            .map((u) => [
+              u.name,
+              u.email,
+              u.role,
+              u.isBlocked ? "Yes" : "No",
+              new Date(u.createdAt).toLocaleDateString(),
+            ]),
+        });
+      }
 
-      doc.save(`skillswap-admin-report-${Date.now()}.pdf`);
+      if (activeTab === "ratings") {
+        autoTable(doc, {
+          startY: 35,
+          head: [["Tutor", "Average Rating", "Ratings Count", "Certified"]],
+          body: ratings.map((stat) => [
+            stat.tutor?.name || "Unknown",
+            stat.averageRating?.toFixed(2) || "-",
+            String(stat.ratingCount || 0),
+            stat.tutor?.certifiedTutor ? "Yes" : "No",
+          ]),
+        });
+      }
+
+      if (activeTab === "sessions") {
+        autoTable(doc, {
+          startY: 35,
+          head: [["Metric", "Value"]],
+          body: [
+            ["Total sessions", String(counts.sessions)],
+            ["Pending", String(sessionStatusCounts.pending)],
+            ["Accepted", String(sessionStatusCounts.accepted)],
+            ["Rejected", String(sessionStatusCounts.rejected)],
+          ],
+        });
+
+        autoTable(doc, {
+          head: [["Subject", "Tutor", "Student", "Status", "Time"]],
+          body: sessions
+            .slice(0, 120)
+            .map((s) => [
+              s.subject,
+              s.tutorName,
+              s.studentName,
+              s.status,
+              new Date(s.time).toLocaleString(),
+            ]),
+        });
+      }
+
+      // Add footer on every page.
+      const pageCount = doc.getNumberOfPages();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      for (let page = 1; page <= pageCount; page += 1) {
+        doc.setPage(page);
+        doc.setFontSize(9);
+        doc.setTextColor(100);
+        doc.text(
+          "SkillSwap all rights reserved",
+          pageWidth / 2,
+          pageHeight - 10,
+          { align: "center" },
+        );
+      }
+      doc.setTextColor(0);
+
+      doc.save(`skillswap-${activeTab}-report-${Date.now()}.pdf`);
     } catch {
       setError("Failed to generate PDF report.");
     } finally {
@@ -166,40 +241,48 @@ export default function AdminDashboard() {
     sessions: sessions.length,
   };
 
+  const sessionStatusCounts = useMemo(() => {
+    const summary = { pending: 0, accepted: 0, rejected: 0 };
+    sessions.forEach((session) => {
+      if (session.status in summary) summary[session.status] += 1;
+    });
+    return summary;
+  }, [sessions]);
+
+  const pieTotal = Math.max(counts.students + counts.tutors, 1);
+  const studentPercent = Math.round((counts.students / pieTotal) * 100);
+  const tutorPercent = Math.round((counts.tutors / pieTotal) * 100);
+  const sessionMax = Math.max(
+    sessionStatusCounts.pending,
+    sessionStatusCounts.accepted,
+    sessionStatusCounts.rejected,
+    1,
+  );
+
   return (
     <div className="admin-dashboard-container">
-      <header className="admin-header fixed-header">
-        <div className="auth-section">
-          <NavLink to="/tutor-search" className="auth-btn login">
-            Tutor Search
-          </NavLink>
-          <NavLink to="/student-search" className="auth-btn login">
-            Games
-          </NavLink>
-          <NavLink to="/" className="auth-btn login">
-            Home
-          </NavLink>
-          <button type="button" className="auth-btn login" onClick={handleLogout}>
-            Logout
-          </button>
-        </div>
-      </header>
-
       <main className="admin-scroll">
         <section className="admin-overview">
           <div className="admin-card summary-card">
-            <h2>Welcome back, {me?.name || "Admin"}</h2>
-            <p className="admin-intro">
-              Track users, review tutor ratings, and inspect sessions from a single admin view.
-            </p>
-            <button
-              type="button"
-              className="row-btn report-btn"
-              onClick={exportReportPdf}
-              disabled={pdfLoading}
-            >
-              {pdfLoading ? "Generating PDF..." : "Export Report PDF"}
-            </button>
+            <div className="summary-top-row">
+              <div>
+                <span className="admin-badge">Admin Control Center</span>
+                <h2>Welcome back, {me?.name || "Admin"}</h2>
+                <p className="admin-intro">
+                  Manage users, track sessions, and review tutor ratings with a
+                  clean, focused dashboard.
+                </p>
+              </div>
+              <div className="summary-actions">
+                <button
+                  type="button"
+                  className="row-btn logout-btn"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="admin-stats-grid">
@@ -220,30 +303,125 @@ export default function AdminDashboard() {
               <strong>{counts.sessions}</strong>
             </div>
           </div>
+
+          <div className="admin-visuals-grid">
+            <div className="admin-card chart-card">
+              <div className="list-header chart-head">
+                <div>
+                  <h3>User Distribution</h3>
+                  <p className="tab-subtitle">Students vs Tutors (pie chart)</p>
+                </div>
+              </div>
+              <div className="pie-layout">
+                <div
+                  className="pie-chart"
+                  style={{
+                    background: `conic-gradient(#2563eb 0% ${studentPercent}%, #14b8a6 ${studentPercent}% ${studentPercent + tutorPercent}%, #dbeafe ${studentPercent + tutorPercent}% 100%)`,
+                  }}
+                  aria-label="Users pie chart"
+                />
+                <div className="pie-legend">
+                  <div className="legend-item">
+                    <span className="legend-dot students" />
+                    <span>Students</span>
+                    <strong>{counts.students}</strong>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-dot tutors" />
+                    <span>Tutors</span>
+                    <strong>{counts.tutors}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="admin-card chart-card">
+              <div className="list-header chart-head">
+                <div>
+                  <h3>Session Status Overview</h3>
+                  <p className="tab-subtitle">
+                    Accepted and pending sessions graph
+                  </p>
+                </div>
+              </div>
+              <div className="bars-wrap">
+                <div className="bar-row">
+                  <span className="bar-label">Accepted</span>
+                  <div className="bar-track">
+                    <div
+                      className="bar-fill accepted"
+                      style={{
+                        width: `${(sessionStatusCounts.accepted / sessionMax) * 100}%`,
+                      }}
+                    />
+                  </div>
+                  <strong>{sessionStatusCounts.accepted}</strong>
+                </div>
+                <div className="bar-row">
+                  <span className="bar-label">Pending</span>
+                  <div className="bar-track">
+                    <div
+                      className="bar-fill pending"
+                      style={{
+                        width: `${(sessionStatusCounts.pending / sessionMax) * 100}%`,
+                      }}
+                    />
+                  </div>
+                  <strong>{sessionStatusCounts.pending}</strong>
+                </div>
+                <div className="bar-row">
+                  <span className="bar-label">Rejected</span>
+                  <div className="bar-track">
+                    <div
+                      className="bar-fill rejected"
+                      style={{
+                        width: `${(sessionStatusCounts.rejected / sessionMax) * 100}%`,
+                      }}
+                    />
+                  </div>
+                  <strong>{sessionStatusCounts.rejected}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section className="admin-tab-panel">
           <div className="admin-tab-list">
             <button
               type="button"
-              className={activeTab === "users" ? "admin-tab active" : "admin-tab"}
+              className={
+                activeTab === "users" ? "admin-tab active" : "admin-tab"
+              }
               onClick={() => setActiveTab("users")}
             >
               Users
             </button>
             <button
               type="button"
-              className={activeTab === "ratings" ? "admin-tab active" : "admin-tab"}
+              className={
+                activeTab === "ratings" ? "admin-tab active" : "admin-tab"
+              }
               onClick={() => setActiveTab("ratings")}
             >
               Tutor Ratings
             </button>
             <button
               type="button"
-              className={activeTab === "sessions" ? "admin-tab active" : "admin-tab"}
+              className={
+                activeTab === "sessions" ? "admin-tab active" : "admin-tab"
+              }
               onClick={() => setActiveTab("sessions")}
             >
               Sessions
+            </button>
+            <button
+              type="button"
+              className="admin-tab pdf-generate-btn"
+              onClick={exportReportPdf}
+              disabled={pdfLoading}
+            >
+              {pdfLoading ? "Generating PDF..." : "Generate PDF"}
             </button>
           </div>
 
@@ -257,26 +435,40 @@ export default function AdminDashboard() {
                   <div className="list-header">
                     <div>
                       <h3>Users</h3>
-                      <p className="tab-subtitle">Filter the list to show students or tutors.</p>
+                      <p className="tab-subtitle">
+                        Filter the list to show students or tutors.
+                      </p>
                     </div>
                     <div className="filter-row">
                       <button
                         type="button"
-                        className={userFilter === "all" ? "filter-btn active" : "filter-btn"}
+                        className={
+                          userFilter === "all"
+                            ? "filter-btn active"
+                            : "filter-btn"
+                        }
                         onClick={() => setUserFilter("all")}
                       >
                         All
                       </button>
                       <button
                         type="button"
-                        className={userFilter === "student" ? "filter-btn active" : "filter-btn"}
+                        className={
+                          userFilter === "student"
+                            ? "filter-btn active"
+                            : "filter-btn"
+                        }
                         onClick={() => setUserFilter("student")}
                       >
                         Students
                       </button>
                       <button
                         type="button"
-                        className={userFilter === "tutor" ? "filter-btn active" : "filter-btn"}
+                        className={
+                          userFilter === "tutor"
+                            ? "filter-btn active"
+                            : "filter-btn"
+                        }
                         onClick={() => setUserFilter("tutor")}
                       >
                         Tutors
@@ -301,25 +493,43 @@ export default function AdminDashboard() {
                             <td>{user.name}</td>
                             <td>{user.email}</td>
                             <td>{user.role}</td>
-                            <td>{user.isBlocked ? "Blocked" : "Active"}</td>
-                            <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                            <td>
+                              <span
+                                className={
+                                  user.isBlocked
+                                    ? "status-chip blocked"
+                                    : "status-chip active"
+                                }
+                              >
+                                {user.isBlocked ? "Blocked" : "Active"}
+                              </span>
+                            </td>
+                            <td>
+                              {new Date(user.createdAt).toLocaleDateString()}
+                            </td>
                             <td>
                               <div className="actions-inline">
-                                <button className="row-btn" type="button" onClick={() => openUser(user._id)}>
-                                  View
+                                <button
+                                  className="row-btn"
+                                  type="button"
+                                  onClick={() => openUser(user._id)}
+                                >
+                                  View Profile
                                 </button>
                                 {user.role !== "admin" && (
                                   <button
                                     className={`row-btn ${user.isBlocked ? "unblock-btn" : "block-btn"}`}
                                     type="button"
                                     disabled={busyUserId === user._id}
-                                    onClick={() => setBlocked(user._id, !user.isBlocked)}
+                                    onClick={() =>
+                                      setBlocked(user._id, !user.isBlocked)
+                                    }
                                   >
                                     {busyUserId === user._id
                                       ? "Saving..."
                                       : user.isBlocked
-                                      ? "Unblock"
-                                      : "Block"}
+                                        ? "Unblock User"
+                                        : "Block User"}
                                   </button>
                                 )}
                               </div>
@@ -337,7 +547,9 @@ export default function AdminDashboard() {
                   <div className="list-header">
                     <div>
                       <h3>Tutor Ratings</h3>
-                      <p className="tab-subtitle">Review average tutor ratings and volume.</p>
+                      <p className="tab-subtitle">
+                        Review average tutor ratings and volume.
+                      </p>
                     </div>
                     <span>{ratings.length} entries</span>
                   </div>
@@ -369,7 +581,10 @@ export default function AdminDashboard() {
                   <div className="list-header">
                     <div>
                       <h3>Sessions</h3>
-                      <p className="tab-subtitle">Inspect session requests, accepted bookings, and completed sessions.</p>
+                      <p className="tab-subtitle">
+                        Inspect session requests, accepted bookings, and
+                        completed sessions.
+                      </p>
                     </div>
                     <span>{sessions.length} total</span>
                   </div>
@@ -390,7 +605,11 @@ export default function AdminDashboard() {
                             <td>{session.subject}</td>
                             <td>{session.tutorName}</td>
                             <td>{session.studentName}</td>
-                            <td>{session.status}</td>
+                            <td>
+                              <span className="status-chip session-chip">
+                                {session.status}
+                              </span>
+                            </td>
                             <td>{new Date(session.time).toLocaleString()}</td>
                           </tr>
                         ))}
@@ -424,7 +643,7 @@ export default function AdminDashboard() {
                 <ul>
                   {selectedUser.sessions.slice(0, 10).map((session) => (
                     <li key={session._id}>
-                      {session.subject} — {session.status} —{' '}
+                      {session.subject} — {session.status} —{" "}
                       {new Date(session.time).toLocaleString()}
                     </li>
                   ))}
