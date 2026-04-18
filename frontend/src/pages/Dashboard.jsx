@@ -1,12 +1,9 @@
 import { useState, useEffect, useMemo, useReducer } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { format, addMonths, subMonths } from "date-fns";
-import axios from "axios";
 import API from "../services/api";
 import { sameLocalCalendarDay } from "../utils/sessionUtils";
 import "./Dashboard.css";
-
-const API_URL = "http://localhost:5000";
 
 export default function TutorDashboard() {
   const navigate = useNavigate();
@@ -45,8 +42,7 @@ export default function TutorDashboard() {
   }, [navigate]);
 
   useEffect(() => {
-    axios
-      .get(`${API_URL}/auth/tutor/exam/subjects`)
+    API.get("/auth/tutor/exam/subjects")
       .then((res) => {
         const m = {};
         (res.data.subjects || []).forEach((s) => {
@@ -69,7 +65,7 @@ export default function TutorDashboard() {
   const [profilePic, setProfilePic] = useState("/images/profile.jpg");
 
   const [tempBio, setTempBio] = useState("");
-  const [tempPic, setTempPic] = useState(profilePic);
+  const [tempPic, setTempPic] = useState("/images/profile.jpg");
 
   const [feedbackList, setFeedbackList] = useState([]);
 
@@ -86,9 +82,7 @@ export default function TutorDashboard() {
 
     const fetchSessions = async () => {
       try {
-        const res = await axios.get(
-          `${API_URL}/sessions/tutor/user/${me._id}`
-        );
+        const res = await API.get(`/sessions/tutor/user/${me._id}`);
 
         const pending = res.data.filter((s) => s.status === "pending");
         const accepted = res.data.filter((s) => s.status === "accepted");
@@ -106,8 +100,7 @@ export default function TutorDashboard() {
   useEffect(() => {
     if (!me?._id) return;
     const loadFeedback = () => {
-      axios
-        .get(`${API_URL}/sessions/tutor/user/${me._id}/feedbacks`)
+      API.get(`/sessions/tutor/user/${me._id}/feedbacks`)
         .then((res) => setFeedbackList(res.data || []))
         .catch(() => setFeedbackList([]));
     };
@@ -122,10 +115,9 @@ export default function TutorDashboard() {
   // ✅ ACCEPT → UPDATE DB
   const handleAccept = async (id) => {
     try {
-      const res = await axios.patch(
-        `${API_URL}/sessions/${id}/status`,
-        { status: "accepted" }
-      );
+      const res = await API.patch(`/sessions/${id}/status`, {
+        status: "accepted",
+      });
 
       setCalendarSessions((prev) => [...prev, res.data]);
       setSessionRequests((prev) => prev.filter((s) => s._id !== id));
@@ -139,10 +131,7 @@ export default function TutorDashboard() {
   // ✅ REJECT → UPDATE DB
   const handleReject = async (id) => {
     try {
-      await axios.patch(
-        `${API_URL}/sessions/${id}/status`,
-        { status: "rejected" }
-      );
+      await API.patch(`/sessions/${id}/status`, { status: "rejected" });
 
       setSessionRequests((prev) => prev.filter((s) => s._id !== id));
 
@@ -152,16 +141,22 @@ export default function TutorDashboard() {
   };
 
   useEffect(() => {
-    if (me?.bio !== undefined) {
-      const b = me.bio || "";
-      setBio(b);
-      setTempBio(b);
+    if (me?._id) {
+      const currentBio = me.bio || "";
+      const currentPic = me.profilePic || "/images/profile.jpg";
+      setBio(currentBio);
+      setTempBio(currentBio);
+      setProfilePic(currentPic);
+      setTempPic(currentPic);
     }
-  }, [me?.bio, me?._id]);
+  }, [me?._id, me?.bio, me?.profilePic]);
 
   const handleSave = async () => {
     try {
-      await API.patch("/auth/profile", { bio: tempBio });
+      await API.patch("/auth/profile", {
+        bio: tempBio,
+        profilePic: tempPic,
+      });
       const meRes = await API.get("/auth/me");
       const u = meRes.data.user;
       localStorage.setItem("user", JSON.stringify(u));
@@ -171,13 +166,24 @@ export default function TutorDashboard() {
       setEditing(false);
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Could not save profile");
+      alert(
+        err.response?.data?.message ||
+        err.response?.statusText ||
+        err.message ||
+        "Could not save profile"
+      );
     }
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) setTempPic(URL.createObjectURL(file));
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setTempPic(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const daysInMonth = (date) => {
@@ -209,11 +215,8 @@ export default function TutorDashboard() {
   return (
     <div className="dashboard-container">
       <header className="top-header fixed-header">
-        <div className="logo-section">
-          <img src="/images/logo.jpg" alt="logo" />
-          <h1>SkillSwap</h1>
-        </div>
         <div className="auth-section">
+          <NavLink to="/tutor-search" className="auth-btn login">Tutor Search</NavLink>
           <NavLink to="/" className="auth-btn login">Home</NavLink>
           <button type="button" className="auth-btn login" onClick={handleLogout}>
             Logout
@@ -355,6 +358,18 @@ export default function TutorDashboard() {
         <div className="modal-overlay">
           <div className="modal-card profile-modal bigger-modal profile-edit-modal">
             <h2>Edit Profile</h2>
+            <div className="profile-photo-upload">
+              <img src={tempPic} alt="Preview" className="profile-photo-preview" />
+              <label className="profile-upload-label">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  hidden
+                />
+                Change Profile Photo
+              </label>
+            </div>
             <label className="profile-edit-label" htmlFor="profile-bio-edit">
               Bio
             </label>

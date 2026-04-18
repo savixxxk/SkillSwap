@@ -50,13 +50,20 @@ function recomputeCertifiedTutor(user) {
 // POST /auth/register
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, adminCode } = req.body;
     if (!name || !email || !password || !role) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    if (!["student", "tutor"].includes(role)) {
+    if (!["student", "tutor", "admin"].includes(role)) {
       return res.status(400).json({ message: "Invalid role" });
+    }
+
+    if (role === "admin") {
+      const requiredCode = process.env.ADMIN_REGISTRATION_CODE;
+      if (!requiredCode || adminCode !== requiredCode) {
+        return res.status(403).json({ message: "Admin registration is restricted" });
+      }
     }
 
     const existingUser = await User.findOne({ email });
@@ -71,6 +78,7 @@ router.post("/register", async (req, res) => {
       password: hashedPassword,
       role,
       certifiedTutor: false,
+      profilePic: "/images/profile.jpg",
       teachingSubjects: [],
       examAttempts: [],
     });
@@ -99,6 +107,9 @@ router.post("/login", async (req, res) => {
     const user = await User.findOne({ email });
     if (!user)
       return res.status(400).json({ message: "Invalid email or password" });
+    if (user.isBlocked) {
+      return res.status(403).json({ message: "Your account has been blocked by an admin" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
@@ -241,17 +252,23 @@ router.get("/me", requireAuth, async (req, res) => {
   }
 });
 
-// PATCH /auth/profile — update bio (tutors / students)
+// PATCH /auth/profile — update bio and profile picture (tutors / students)
 router.patch("/profile", requireAuth, async (req, res) => {
   try {
-    const { bio } = req.body;
+    const { bio, profilePic } = req.body;
     if (bio !== undefined && typeof bio !== "string") {
       return res.status(400).json({ message: "Bio must be text" });
+    }
+    if (profilePic !== undefined && typeof profilePic !== "string") {
+      return res.status(400).json({ message: "Profile picture must be a URL or data URI" });
     }
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ message: "User not found" });
     if (bio !== undefined) {
       user.bio = bio.slice(0, 2000);
+    }
+    if (profilePic !== undefined) {
+      user.profilePic = profilePic || "/images/profile.jpg";
     }
     await user.save();
     res.json({ user: toPublicUser(user) });

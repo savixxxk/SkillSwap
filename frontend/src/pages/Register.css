@@ -77,13 +77,14 @@
 .role-buttons {
   display: flex;
   justify-content: center;
-  gap: 3rem;
+  gap: 2rem;
   margin-top: 2rem;
+  flex-wrap: wrap;
 }
 
 .role-buttons button {
-  padding: 1.2rem 3rem;
-  font-size: 1.2rem;
+  padding: 1.2rem 2.2rem;
+  font-size: 1.1rem;
   border-radius: 40px;
   border: none;
   cursor: pointer;
@@ -93,13 +94,23 @@
 }
 
 /* Student button */
-.role-buttons button:first-child {
-  background: linear-gradient(135deg, #6fa6ce, #33dae9);
+.role-buttons button:nth-child(1) {
+  background: linear-gradient(135deg, #7fb8ff, #37a2ff);
 }
 
 /* Tutor button */
-.role-buttons button:last-child {
-  background: linear-gradient(135deg, #4a90e2, #357ABD);
+.role-buttons button:nth-child(2) {
+  background: linear-gradient(135deg, #4a90e2, #357abd);
+}
+
+/* Admin button */
+.role-buttons button:nth-child(3) {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+/* Admin button */
+.role-buttons button:nth-child(3) {
+  background: linear-gradient(135deg, #7c3aed, #c084fc);
 }
 
 .role-buttons button:hover {

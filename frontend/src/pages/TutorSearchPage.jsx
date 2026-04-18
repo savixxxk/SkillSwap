@@ -5,29 +5,19 @@ import { format } from 'date-fns';
 import { Search, ArrowRight, Target, Award, Calendar, TrendingUp, User, Mail, BookOpen, Star, Settings, Users, Clock, DollarSign } from 'lucide-react';
 
 // Import all the same components
-import Hero from './Hero';
-import CategoriesBar from './CategoriesBar';
-import TutorSearchCard from './TutorSearchCard';
-import AvailableTutors from './AvailableTutors';
-import TutorFeatures from './TutorFeatures';
-import HowItWorks from './HowItWorks';
-import Testimonials from './Testimonials';
-import CallToAction from './CallToAction';
-import InfoSection from './InfoSection';
-import Footer from './Footer';
+import Hero from '../components/Hero';
+import CategoriesBar from '../components/CategoriesBar';
+import TutorSearchCard from '../components/TutorSearchCard';
+import AvailableTutors from '../components/AvailableTutors';
+import TutorFeatures from '../components/TutorFeatures';
+import HowItWorks from '../components/HowItWorks';
+import Testimonials from '../components/Testimonials';
+import CallToAction from '../components/CallToAction';
+import InfoSection from '../components/InfoSection';
+import Footer from '../components/Footer';
 
-// Import CSS files
-import './EnhancedSearchPage.css';
-import './Hero.css';
-import './CategoriesBar.css';
-import './TutorSearchCard.css';
-import './AvailableTutors.css';
-import './TutorFeatures.css';
-import './HowItWorks.css';
-import './Testimonials.css';
-import './CallToAction.css';
-import './InfoSection.css';
-import './Footer.css';
+// Page-specific CSS
+
 import './Home.css';
 import './TutorSearchPage.css';
 
@@ -58,6 +48,7 @@ function initials(name) {
 const TutorSearchPage = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [viewerRole, setViewerRole] = useState("student");
   const [subjectMap, setSubjectMap] = useState({});
   const [allTutors, setAllTutors] = useState([]);
   const [filteredTutors, setFilteredTutors] = useState([]);
@@ -82,11 +73,12 @@ const TutorSearchPage = () => {
       return;
     }
     const u = JSON.parse(raw);
-    if (u.role !== "tutor") {
+    if (!["student", "tutor"].includes(u.role)) {
       navigate("/", { replace: true });
       return;
     }
     setUser(u);
+    setViewerRole(u.role);
   }, [navigate]);
 
   useEffect(() => {
@@ -109,9 +101,10 @@ const TutorSearchPage = () => {
       try {
         setLoading(true);
         const res = await axios.get(`${API}/tutors/directory`);
+        const cleanTutors = (res.data || []).filter((item) => item.role !== "admin");
         if (!cancelled) {
-          setAllTutors(res.data || []);
-          setFilteredTutors(res.data || []);
+          setAllTutors(cleanTutors);
+          setFilteredTutors(cleanTutors);
         }
       } catch (e) {
         console.error("Could not load tutors:", e);
@@ -130,7 +123,7 @@ const TutorSearchPage = () => {
 
   // Load tutor's personal stats
   useEffect(() => {
-    if (!user?._id) return;
+    if (!user?._id || viewerRole !== "tutor") return;
     
     const loadMyStats = async () => {
       try {
@@ -165,7 +158,7 @@ const TutorSearchPage = () => {
     };
     
     loadMyStats();
-  }, [user]);
+  }, [user, viewerRole]);
 
   // Handle search filtering
   const handleSearch = useCallback((filters) => {
@@ -275,34 +268,42 @@ const TutorSearchPage = () => {
 
   return (
     <div className="tutor-search-page">
-      {/* Tutor-specific Hero Section */}
-      <section className="tutor-hero-section">
+      {/* Hero Section */}
+      <section className="tutor-hero-section" style={{ background: "linear-gradient(135deg, #0b1f4d 0%, #0f2f6b 100%)" }}>
         <div className="container">
           <div className="tutor-hero-content">
             <div className="tutor-welcome">
-              <h1>Welcome back, {user?.name || 'Tutor'}!</h1>
-              <p>Discover your fellow certified tutors and track your performance</p>
+              <h1>
+                {viewerRole === "tutor"
+                  ? `Welcome back, ${user?.name || "Tutor"}!`
+                  : `Welcome, ${user?.name || "Student"}!`}
+              </h1>
+              <p>
+                {viewerRole === "tutor"
+                  ? "Discover fellow certified tutors and track your performance"
+                  : "Find certified tutors by subject, rating, and availability"}
+              </p>
             </div>
             <div className="tutor-quick-stats">
               <div className="quick-stat">
                 <DollarSign size={20} />
                 <div>
-                  <h3>${myStats.totalEarnings}</h3>
-                  <p>Total Earnings</p>
+                  <h3>{viewerRole === "tutor" ? `$${myStats.totalEarnings}` : filteredTutors.length}</h3>
+                  <p>{viewerRole === "tutor" ? "Total Earnings" : "Tutors Found"}</p>
                 </div>
               </div>
               <div className="quick-stat">
                 <Users size={20} />
                 <div>
-                  <h3>{myStats.totalSessions}</h3>
-                  <p>Sessions Completed</p>
+                  <h3>{viewerRole === "tutor" ? myStats.totalSessions : "24/7"}</h3>
+                  <p>{viewerRole === "tutor" ? "Sessions Completed" : "Support"}</p>
                 </div>
               </div>
               <div className="quick-stat">
                 <Star size={20} />
                 <div>
-                  <h3>{myStats.averageRating}</h3>
-                  <p>Average Rating</p>
+                  <h3>{viewerRole === "tutor" ? myStats.averageRating : "4.9"}</h3>
+                  <p>{viewerRole === "tutor" ? "Average Rating" : "Avg Tutor Rating"}</p>
                 </div>
               </div>
             </div>
@@ -318,8 +319,14 @@ const TutorSearchPage = () => {
         <div className="container">
           <div className="info-header text-center">
             <span className="section-label">DISCOVER TUTORS</span>
-            <h2 className="info-title">Find Fellow Certified Tutors</h2>
-            <p className="info-description">Search and connect with other qualified tutors on the platform.</p>
+            <h2 className="info-title">
+              {viewerRole === "tutor" ? "Find Fellow Certified Tutors" : "Find Your Perfect Tutor"}
+            </h2>
+            <p className="info-description">
+              {viewerRole === "tutor"
+                ? "Search and connect with other qualified tutors on the platform."
+                : "Use filters to compare top tutors and book sessions confidently."}
+            </p>
           </div>
           <div className="info-content-below">
             <TutorSearchCard onSearch={handleSearch} />
@@ -330,33 +337,45 @@ const TutorSearchPage = () => {
       {/* Available Tutors Section */}
       <AvailableTutors tutors={transformedTutors} isLoading={loading} />
 
-      {/* Tutor-specific Features */}
+      {/* Role-specific Tools */}
       <section className="info-section" style={{ backgroundColor: '#f8fafc', padding: '80px 0' }}>
         <div className="container">
           <div className="info-header text-center">
-            <span className="section-label">TUTOR TOOLS</span>
-            <h2 className="info-title">Your Teaching Dashboard</h2>
-            <p className="info-description">Manage your tutoring career and grow your student base.</p>
+            <span className="section-label">{viewerRole === "tutor" ? "TUTOR TOOLS" : "STUDENT TOOLS"}</span>
+            <h2 className="info-title">
+              {viewerRole === "tutor" ? "Your Teaching Dashboard" : "Your Learning Dashboard"}
+            </h2>
+            <p className="info-description">
+              {viewerRole === "tutor"
+                ? "Manage your tutoring career and grow your student base."
+                : "Discover tutors, review profiles, and schedule sessions in minutes."}
+            </p>
           </div>
           <div className="info-content-below">
             <div className="tutor-tools-grid">
               <div className="tool-card">
                 <Calendar size={32} />
-                <h3>Session Calendar</h3>
-                <p>Manage your schedule and upcoming sessions</p>
-                <Link to="/dashboard" className="btn-primary">View Calendar</Link>
+                <h3>{viewerRole === "tutor" ? "Session Calendar" : "Upcoming Sessions"}</h3>
+                <p>{viewerRole === "tutor" ? "Manage your schedule and upcoming sessions" : "Track your booked and upcoming sessions"}</p>
+                <Link to={viewerRole === "tutor" ? "/dashboard" : "/student-profile"} className="btn-primary">
+                  {viewerRole === "tutor" ? "View Calendar" : "View Sessions"}
+                </Link>
               </div>
               <div className="tool-card">
                 <DollarSign size={32} />
-                <h3>Earnings Tracker</h3>
-                <p>Monitor your income and payment history</p>
-                <Link to="/dashboard" className="btn-primary">View Earnings</Link>
+                <h3>{viewerRole === "tutor" ? "Earnings Tracker" : "Tutor Compare"}</h3>
+                <p>{viewerRole === "tutor" ? "Monitor your income and payment history" : "Compare tutors by rating and experience"}</p>
+                <Link to="/tutor-search" className="btn-primary">
+                  {viewerRole === "tutor" ? "View Earnings" : "Compare Tutors"}
+                </Link>
               </div>
               <div className="tool-card">
                 <Award size={32} />
-                <h3>Performance Analytics</h3>
-                <p>Track your ratings and student feedback</p>
-                <Link to="/dashboard" className="btn-primary">View Stats</Link>
+                <h3>{viewerRole === "tutor" ? "Performance Analytics" : "Learning Progress"}</h3>
+                <p>{viewerRole === "tutor" ? "Track your ratings and student feedback" : "Review your bookings and progress over time"}</p>
+                <Link to={viewerRole === "tutor" ? "/dashboard" : "/student-profile"} className="btn-primary">
+                  {viewerRole === "tutor" ? "View Stats" : "View Progress"}
+                </Link>
               </div>
             </div>
           </div>

@@ -1,239 +1,154 @@
+﻿import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import "./Home.css";
+import { BookOpen, Calendar, ShieldCheck, Users } from "lucide-react";
+import CategoriesBar from "../components/CategoriesBar";
+import TutorFeatures from "../components/TutorFeatures";
+import HowItWorks from "../components/HowItWorks";
+import Testimonials from "../components/Testimonials";
+import CallToAction from "../components/CallToAction";
+import Footer from "../components/Footer";
+import "./TutorSearchPage.css";
 
 export default function Home() {
   const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [current, setCurrent] = useState(0);
   const [user, setUser] = useState(null);
+  const [pendingRequests, setPendingRequests] = useState(0);
 
-  const images = [
-    "/images/slide6.jpg",
-    "/images/slide7.jpg",
-    "/images/slide8.jpg",
-    "/images/slide9.jpg",
-    "/images/slide10.jpg"
-  ];
-
-  // Slideshow
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % images.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Get user from localStorage; uncertified tutors finish certification first
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (!storedUser) return;
-    const parsed = JSON.parse(storedUser);
-    setUser(parsed);
-    if (parsed.role === "tutor" && !parsed.certifiedTutor) {
-      navigate("/tutor/certification", { replace: true });
+    if (storedUser) setUser(JSON.parse(storedUser));
+  }, []);
+
+  useEffect(() => {
+    if (!user?._id || user.role !== "tutor") {
+      setPendingRequests(0);
+      return;
     }
-  }, [navigate]);
+    let mounted = true;
+    const loadPending = () => {
+      fetch(`http://localhost:5000/sessions/tutor/user/${user._id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+        },
+      })
+        .then((res) => (res.ok ? res.json() : []))
+        .then((list) => {
+          if (!mounted) return;
+          const count = (list || []).filter((s) => s.status === "pending").length;
+          setPendingRequests(count);
+        })
+        .catch(() => {
+          if (mounted) setPendingRequests(0);
+        });
+    };
+    loadPending();
+    const id = setInterval(loadPending, 20000);
+    return () => {
+      mounted = false;
+      clearInterval(id);
+    };
+  }, [user?._id, user?.role]);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     setUser(null);
-    window.location.href = "/";
+    navigate("/", { replace: true });
   };
 
   return (
-    <div className="home-container">
-
-      {/* HEADER */}
-      <header className="top-header">
-        <div className="logo-section">
-          <img src="/images/logo.jpg" alt="logo" />
-          <h1>SkillSwap</h1>
-        </div>
-
-        <div className="header-quote">
-          "𝒪𝓃𝒸𝑒 𝓎𝑜𝓊 𝓈𝓉𝑜𝓅 𝓁𝑒𝒶𝓇𝓃𝒾𝓃𝑔, 𝓎𝑜𝓊 𝓈𝓉𝒶𝓇𝓉 𝒹𝓎𝒾𝓃𝑔." — 𝒜𝓁𝒷𝑒𝓇𝓉 𝐸𝒾𝓃𝓈𝓉𝑒𝒾𝓃
-        </div>
-
-        <div className="auth-section">
+    <div className="tutor-search-page">
+      <header className="bg-[#081121] text-white border-b border-white/10">
+        <div className="container flex items-center justify-between py-4">
+        <div className="flex items-center gap-2 ml-auto">
           {user ? (
             <>
-              <span className="header-welcome">
-                Welcome,{" "}
-                <span className="header-welcome-name">{user.name}</span>
-              </span>
-              <button className="auth-btn login" onClick={handleLogout}>
+              <button className="btn-outline" type="button" onClick={() => navigate("/tutor-search")}>
+                Tutor Search
+              </button>
+              {user.role !== "tutor" && (
+                <button className="btn-outline" type="button" onClick={() => navigate("/student-search")}>
+                  Games
+                </button>
+              )}
+              {user.role === "tutor" && (
+                <button className="btn-primary relative" type="button" onClick={() => navigate("/dashboard")}>
+                  Tutor Dashboard
+                  {pendingRequests > 0 && (
+                    <span className="ml-2 inline-flex min-w-6 h-6 px-2 rounded-full bg-red-500 text-white text-xs items-center justify-center">
+                      {pendingRequests}
+                    </span>
+                  )}
+                </button>
+              )}
+              <button className="btn-primary" type="button" onClick={handleLogout}>
                 Logout
               </button>
             </>
           ) : (
             <>
-              <NavLink to="/login" className="auth-btn login">
-                Login
-              </NavLink>
-              <NavLink to="/register" className="auth-btn login">
-                Sign-up
-              </NavLink>
+              <button className="btn-outline" type="button" onClick={() => navigate("/student-search")}>
+                Games
+              </button>
+              <NavLink className="btn-outline" to="/login">Login</NavLink>
+              <NavLink className="btn-primary" to="/register">Sign up</NavLink>
             </>
           )}
         </div>
+        </div>
       </header>
 
-      {/* Logged-in students & certified tutors only — guests: header only */}
-      {user &&
-        (user.role === "student" ||
-          (user.role === "tutor" && user.certifiedTutor)) && (
-        <nav className={`navbar ${menuOpen ? "active" : ""}`}>
-          <div
-            className="menu-toggle"
-            onClick={() => setMenuOpen(!menuOpen)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) =>
-              e.key === "Enter" && setMenuOpen((o) => !o)
-            }
-            aria-label="Toggle menu"
-          >
-            ☰
-          </div>
-
-          <ul className="nav-links">
-            {user.role === "student" && (
-              <>
-                <li>
-                  <NavLink
-                    to="/search"
-                    className={({ isActive }) =>
-                      isActive ? "nav-item active" : "nav-item"
-                    }
-                  >
-                    Search
-                  </NavLink>
-                </li>
-
-                <li>
-                  <NavLink
-                    to="/games"
-                    className={({ isActive }) =>
-                      isActive ? "nav-item active" : "nav-item"
-                    }
-                  >
-                    Games
-                  </NavLink>
-                </li>
-
-                <li>
-                  <NavLink
-                    to="/student-profile"
-                    className={({ isActive }) =>
-                      isActive ? "nav-item active" : "nav-item"
-                    }
-                  >
-                    Student Profile
-                  </NavLink>
-                </li>
-
-                <li>
-                  <NavLink
-                    to="/booking"
-                    className={({ isActive }) =>
-                      isActive ? "nav-item active" : "nav-item"
-                    }
-                  >
-                    Session Booking
-                  </NavLink>
-                </li>
-              </>
-            )}
-
-            {user.role === "tutor" && user.certifiedTutor && (
-              <>
-                <li>
-                  <NavLink
-                    to="/dashboard"
-                    className={({ isActive }) =>
-                      isActive ? "nav-item active" : "nav-item"
-                    }
-                    end
-                  >
-                    Tutor Dashboard
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink
-                    to="/search"
-                    className={({ isActive }) =>
-                      isActive ? "nav-item active" : "nav-item"
-                    }
-                  >
-                    Search
-                  </NavLink>
-                </li>
-              </>
-            )}
-          </ul>
-        </nav>
-        )}
-
-      {/* HERO */}
-      <section className="hero-section">
-        <img src={images[current]} alt="Slideshow" />
-        <div className="hero-overlay">
-          <h1>SkillSwap</h1>
-          <p>Learn from the best. Teach your skills.</p>
-        </div>
-      </section>
-
-      {/* FEATURES */}
-      <div className="features-grid">
-        <div className="feature-card image-card">
-          <img src="/images/tutor.jpg" alt="Certified Tutors" />
-          <div className="card-overlay">
-            <h3>Certified Tutors</h3>
-            <p>Only qualified tutors can teach.</p>
-          </div>
-        </div>
-
-        <div className="feature-card image-card">
-          <img src="/images/progress.jpg" alt="Track Progress" />
-          <div className="card-overlay">
-            <h3>Track Progress</h3>
-            <p>Visual roadmap for student learning.</p>
-          </div>
-        </div>
-
-        <div className="feature-card image-card">
-          <img src="/images/sheduling.jpg" alt="Flexible Scheduling" />
-          <div className="card-overlay">
-            <h3>Flexible Scheduling</h3>
-            <p>Book sessions anytime.</p>
-          </div>
-        </div>
-      </div>
-
-      {/* CONTACT */}
-      <section className="contact-section">
-        <h2>Contact Us</h2>
-
-        <div className="contact-row">
-          <div className="contact-item">
-            <img src="/images/facebook.jpg" alt="Facebook" />
-            <span>facebook.com/SkillSwap</span>
-          </div>
-
-          <div className="contact-item">
-            <img src="/images/whatsapp.png" alt="WhatsApp" />
-            <span>+94 77 123 4567</span>
+      <section className="tutor-hero-section" style={{ background: "linear-gradient(135deg, #0b1f4d 0%, #0f2f6b 100%)" }}>
+        <div className="container">
+          <div className="tutor-hero-content">
+            <div className="tutor-welcome">
+              <h1>Find the right tutor, faster.</h1>
+              <p>Modern search, trusted experts, and smooth scheduling in one place.</p>
+            </div>
+            <div className="tutor-quick-stats">
+              <div className="quick-stat"><Users size={20} /><div><h3>500+</h3><p>Tutors</p></div></div>
+              <div className="quick-stat"><BookOpen size={20} /><div><h3>120+</h3><p>Subjects</p></div></div>
+              <div className="quick-stat"><ShieldCheck size={20} /><div><h3>98%</h3><p>Satisfaction</p></div></div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="home-footer">
-        © 2026 SkillSwap. All rights reserved.
-      </footer>
+      <CategoriesBar />
 
+      <section className="info-section" style={{ backgroundColor: "var(--white)", padding: "60px 0" }}>
+        <div className="container text-center">
+          <span className="section-label">GET STARTED</span>
+          <h2 className="info-title">Jump into learning</h2>
+          <p className="info-description">Search tutors by subject, compare ratings, and book in minutes.</p>
+          <div className="tutor-tools-grid" style={{ marginTop: 24 }}>
+            <div className="tool-card">
+              <BookOpen size={30} />
+              <h3>Browse Subjects</h3>
+              <p>Discover top tutors for math, coding, language and more.</p>
+              <button className="btn-primary" onClick={() => navigate("/tutor-search")}>Explore</button>
+            </div>
+            <div className="tool-card">
+              <Calendar size={30} />
+              <h3>Book Sessions</h3>
+              <p>Pick a time that works and manage upcoming classes easily.</p>
+              <button className="btn-primary" onClick={() => navigate("/tutor-search")}>Book Now</button>
+            </div>
+            <div className="tool-card">
+              <Users size={30} />
+              <h3>Grow with mentors</h3>
+              <p>Track progress with tutors who match your learning goals.</p>
+              <button className="btn-primary" onClick={() => navigate(user ? "/tutor-search" : "/register")}>Start Free</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <TutorFeatures />
+      <HowItWorks />
+      <Testimonials />
+      <CallToAction />
+      <Footer />
     </div>
   );
 }
