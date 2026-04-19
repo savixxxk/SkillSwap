@@ -269,8 +269,7 @@ export default function AdminDashboard() {
                 <span className="admin-badge">Admin Control Center</span>
                 <h2>Welcome back, {me?.name || "Admin"}</h2>
                 <p className="admin-intro">
-                  Manage users, track sessions, and review tutor ratings with a
-                  clean, focused dashboard.
+               
                 </p>
               </div>
               <div className="summary-actions">

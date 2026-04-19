@@ -231,15 +231,64 @@ router.patch("/:id/status", async (req, res) => {
     if (!["pending", "accepted", "rejected"].includes(status)) {
       return res.status(400).json({ message: "Invalid status" });
     }
-    const session = await Session.findByIdAndUpdate(
+
+    const session = await Session.findById(req.params.id);
+    if (!session) {
+      return res.status(404).json({ message: "Session not found" });
+    }
+
+    // If accepting, check for time clashes with other accepted sessions
+    if (status === "accepted") {
+      const sessionTime = new Date(session.time);
+      const sessionEnd = new Date(sessionTime.getTime() + (session.durationMinutes || 60) * 60 * 1000);
+
+      // Find other accepted sessions for this tutor that might clash
+      const conflictingSessions = await Session.find({
+        tutorId: session.tutorId,
+        status: "accepted",
+        _id: { $ne: session._id }, // Exclude current session
+        $or: [
+          // New session starts during existing session
+          {
+            time: { $lte: sessionTime },
+            $expr: {
+              $gt: [
+                { $add: ["$time", { $multiply: [{ $ifNull: ["$durationMinutes", 60] }, 60 * 1000] }] },
+                sessionTime
+              ]
+            }
+          },
+          // New session ends during existing session
+          {
+            time: { $lt: sessionEnd },
+            $expr: {
+              $gte: [
+                { $add: ["$time", { $multiply: [{ $ifNull: ["$durationMinutes", 60] }, 60 * 1000] }] },
+                sessionEnd
+              ]
+            }
+          },
+          // Existing session is completely within new session
+          {
+            time: { $gte: sessionTime, $lt: sessionEnd }
+          }
+        ]
+      });
+
+      if (conflictingSessions.length > 0) {
+        return res.status(400).json({
+          message: "This session conflicts with another accepted session. Please choose a different time."
+        });
+      }
+    }
+
+    const updatedSession = await Session.findByIdAndUpdate(
       req.params.id,
       { status },
       { new: true }
     );
-    if (!session) {
-      return res.status(404).json({ message: "Session not found" });
-    }
-    res.json(session);
+
+    res.json(updatedSession);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

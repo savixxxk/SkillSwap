@@ -92,21 +92,11 @@ export default function Login() {
 
       <div className="w-full max-w-md z-10">
         <div className="text-center mb-10 relative">
-          <NavLink
-            to="/"
-            className="inline-flex mb-6 hover:opacity-90 transition-opacity relative z-10 justify-center"
-          >
-            <img
-              src="/images/logo.jpg"
-              alt="SkillSwap"
-              className="h-14 w-14 rounded-xl object-cover border border-white/20 shadow-lg"
-            />
-          </NavLink>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3 relative z-10 tracking-tight">
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-2 relative z-10 tracking-tight">
             Welcome Back
           </h1>
-          <p className="text-blue-100/90 text-base sm:text-lg relative z-10">
-            Sign in — your account is stored securely in MongoDB via the API.
+          <p className="text-blue-100/80 text-base sm:text-lg relative z-10">
+            Sign in to your account
           </p>
         </div>
 

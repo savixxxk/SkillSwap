@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useReducer } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { format, addMonths, subMonths } from "date-fns";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import API from "../services/api";
 import { sameLocalCalendarDay } from "../utils/sessionUtils";
 import "./Dashboard.css";
@@ -9,6 +11,7 @@ export default function TutorDashboard() {
   const navigate = useNavigate();
   const [me, setMe] = useState(null);
   const [subjectMap, setSubjectMap] = useState({});
+  const [activeTab, setActiveTab] = useState("profile");
 
   useEffect(() => {
     const raw = localStorage.getItem("user");
@@ -77,6 +80,11 @@ export default function TutorDashboard() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
+  // Report generation state
+  const [reportStartDate, setReportStartDate] = useState("");
+  const [reportEndDate, setReportEndDate] = useState("");
+  const [pdfLoading, setPdfLoading] = useState(false);
+
   useEffect(() => {
     if (!me?._id) return;
 
@@ -114,6 +122,23 @@ export default function TutorDashboard() {
 
   // ✅ ACCEPT → UPDATE DB
   const handleAccept = async (id) => {
+    const sessionToAccept = sessionRequests.find((s) => s._id === id);
+    if (!sessionToAccept) return;
+
+    // Check for time clashes with accepted sessions
+    const sessionTime = new Date(sessionToAccept.time);
+    const hasClash = calendarSessions.some((acceptedSession) => {
+      const acceptedTime = new Date(acceptedSession.time);
+      // Check if times are within 1 hour of each other (assuming 1-hour sessions)
+      const timeDiff = Math.abs(sessionTime - acceptedTime);
+      return timeDiff < 60 * 60 * 1000; // 1 hour in milliseconds
+    });
+
+    if (hasClash) {
+      alert("This session conflicts with an already accepted session. Please choose a different time or reject the conflicting session first.");
+      return;
+    }
+
     try {
       const res = await API.patch(`/sessions/${id}/status`, {
         status: "accepted",
@@ -205,10 +230,119 @@ export default function TutorDashboard() {
     return (total / feedbackList.length).toFixed(1);
   }, [feedbackList]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    navigate("/", { replace: true });
+  const getLogoDataUrl = () =>
+    new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject(new Error("Canvas unavailable"));
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/jpeg"));
+      };
+      img.onerror = reject;
+      img.src = "/images/logo.jpg";
+    });
+
+  const exportReportPdf = async () => {
+    if (!reportStartDate || !reportEndDate) {
+      alert("Please select both start and end dates for the report.");
+      return;
+    }
+
+    const start = new Date(reportStartDate);
+    const end = new Date(reportEndDate);
+    if (start > end) {
+      alert("Start date must be before end date.");
+      return;
+    }
+
+    setPdfLoading(true);
+    try {
+      // Get all sessions for the tutor
+      const res = await API.get(`/sessions/tutor/user/${me._id}`);
+      const allSessions = res.data || [];
+
+      // Filter sessions by date range
+      const filteredSessions = allSessions.filter((s) => {
+        const sessionDate = new Date(s.time);
+        return sessionDate >= start && sessionDate <= end;
+      });
+
+      // Count by status
+      const statusCounts = { pending: 0, accepted: 0, rejected: 0, completed: 0 };
+      filteredSessions.forEach((s) => {
+        if (s.status in statusCounts) statusCounts[s.status] += 1;
+        if (s.status === "accepted" && new Date(s.time) < new Date()) {
+          statusCounts.completed += 1;
+        }
+      });
+
+      const doc = new jsPDF();
+      try {
+        const logoData = await getLogoDataUrl();
+        doc.addImage(logoData, "JPEG", 14, 10, 20, 20);
+      } catch {
+        // logo is optional
+      }
+
+      doc.setFontSize(18);
+      doc.text("SkillSwap Tutor Sessions Report", 40, 18);
+      doc.setFontSize(10);
+      doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 25);
+      doc.text(`Tutor: ${me.name}`, 40, 30);
+      doc.text(`Period: ${format(start, "MMM dd, yyyy")} - ${format(end, "MMM dd, yyyy")}`, 40, 35);
+
+      autoTable(doc, {
+        startY: 45,
+        head: [["Status", "Count"]],
+        body: [
+          ["Completed", String(statusCounts.completed)],
+          ["Accepted (Upcoming)", String(statusCounts.accepted - statusCounts.completed)],
+          ["Pending", String(statusCounts.pending)],
+          ["Rejected", String(statusCounts.rejected)],
+        ],
+      });
+
+      autoTable(doc, {
+        head: [["Student", "Subject", "Status", "Time"]],
+        body: filteredSessions
+          .slice(0, 100)
+          .map((s) => [
+            s.studentName,
+            subjectMap[s.subject] || s.subject,
+            s.status,
+            new Date(s.time).toLocaleString(),
+          ]),
+      });
+
+      // Add footer
+      const pageCount = doc.getNumberOfPages();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      for (let page = 1; page <= pageCount; page += 1) {
+        doc.setPage(page);
+        doc.setFontSize(9);
+        doc.setTextColor(100);
+        doc.text(
+          "SkillSwap all rights reserved",
+          pageWidth / 2,
+          pageHeight - 10,
+          { align: "center" },
+        );
+      }
+      doc.setTextColor(0);
+
+      doc.save(`skillswap-tutor-report-${Date.now()}.pdf`);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to generate PDF report.");
+    } finally {
+      setPdfLoading(false);
+    }
   };
 
   if (!me) {
@@ -222,22 +356,6 @@ export default function TutorDashboard() {
   return (
     <div className="dashboard-container">
       <main className="dashboard-scroll">
-        <div className="dashboard-top-actions">
-          <NavLink to="/tutor-search" className="dashboard-top-btn">
-            Tutor Search
-          </NavLink>
-          <NavLink to="/" className="dashboard-top-btn">
-            Home
-          </NavLink>
-          <button
-            type="button"
-            className="dashboard-top-btn"
-            onClick={handleLogout}
-          >
-            Logout
-          </button>
-        </div>
-
         <section className="dashboard-hero">
           <div className="dashboard-hero-content">
             <div className="dashboard-hero-text">
@@ -264,157 +382,244 @@ export default function TutorDashboard() {
           </div>
         </section>
 
-        <section className="dashboard-section">
-          {/* PROFILE */}
-          <div className="profile-panel fill-left">
-            <img src={profilePic} alt="profile" className="profile-pic" />
-            <h3 className="profile-display-name">{me.name}</h3>
-            <p className="profile-subtitle">Tutor profile</p>
-            <p className="profile-bio-block">
-              <strong>Bio:</strong> {bio}
-            </p>
-            <p className="profile-subjects-block">
-              <strong>Subjects you teach:</strong> {teachingSubjectsLine}
-            </p>
-            <button
-              className="edit-btn profile-edit-btn"
-              onClick={() => setEditing(true)}
-            >
-              Edit Profile
-            </button>
-          </div>
+        {/* TABS NAVIGATION */}
+        <div className="dashboard-tabs-nav">
+          <button
+            className={`dashboard-tab ${activeTab === "profile" ? "active" : ""}`}
+            onClick={() => setActiveTab("profile")}
+          >
+            👤 Tutor Profile
+          </button>
+          <button
+            className={`dashboard-tab ${activeTab === "requests" ? "active" : ""}`}
+            onClick={() => setActiveTab("requests")}
+          >
+            📩 Session Requests
+          </button>
+          <button
+            className={`dashboard-tab ${activeTab === "calendar" ? "active" : ""}`}
+            onClick={() => setActiveTab("calendar")}
+          >
+            📅 Session Calendar
+          </button>
+          <button
+            className={`dashboard-tab ${activeTab === "ratings" ? "active" : ""}`}
+            onClick={() => setActiveTab("ratings")}
+          >
+            ⭐ Ratings
+          </button>
+          <button
+            className={`dashboard-tab ${activeTab === "report" ? "active" : ""}`}
+            onClick={() => setActiveTab("report")}
+          >
+            📊 Generate Report
+          </button>
+        </div>
 
-          {/* RIGHT SIDE */}
-          <div className="dashboard-right">
-            {/* RATINGS */}
-            <div className="dash-card">
-              <h3>⭐ Ratings</h3>
-              {feedbackList.length === 0 && (
-                <p className="ratings-empty">No feedback yet from students.</p>
-              )}
-              {feedbackList.map((r) => (
-                <div key={r._id} className="rating-row">
-                  <div className="rating-header">
-                    <strong>{r.student}</strong>
-                    <span className="rating-subject">
-                      {subjectLabel(r.subject)}
-                    </span>
-                    <div className="stars">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <span
-                          key={star}
-                          className={star <= r.rating ? "star filled" : "star"}
-                        >
-                          ★
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  {r.feedback ? (
-                    <span className="feedback">&ldquo;{r.feedback}&rdquo;</span>
-                  ) : (
-                    <span className="feedback muted">No written comment</span>
-                  )}
-                  <div className="rating-date">
-                    {r.submittedAt
-                      ? format(new Date(r.submittedAt), "MMM d, yyyy")
-                      : ""}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* CALENDAR */}
-            <div className="dash-card">
-              <h3>📅 Session calendar</h3>
-              <p className="calendar-hint">
-                Accepted sessions appear on the day they are scheduled (local
-                time).
-              </p>
-              <div className="calendar-header">
+        {/* TAB CONTENTS */}
+        <section className="dashboard-tabs-content">
+          {/* PROFILE TAB */}
+          {activeTab === "profile" && (
+            <div className="tab-panel">
+              <div className="profile-panel fill-left">
+                <img src={profilePic} alt="profile" className="profile-pic" />
+                <h3 className="profile-display-name">{me.name}</h3>
+                <p className="profile-subtitle">Tutor profile</p>
+                <p className="profile-bio-block">
+                  <strong>Bio:</strong> {bio}
+                </p>
+                <p className="profile-subjects-block">
+                  <strong>Subjects you teach:</strong> {teachingSubjectsLine}
+                </p>
                 <button
-                  type="button"
-                  className="edit-btn calendar-arrow-btn"
-                  onClick={handlePrevMonth}
-                  aria-label="Previous month"
+                  className="edit-btn profile-edit-btn"
+                  onClick={() => setEditing(true)}
                 >
-                  ◀
-                </button>
-                <span>{format(currentMonth, "MMMM yyyy")}</span>
-                <button
-                  type="button"
-                  className="edit-btn calendar-arrow-btn"
-                  onClick={handleNextMonth}
-                  aria-label="Next month"
-                >
-                  ▶
+                  Edit Profile
                 </button>
               </div>
+            </div>
+          )}
 
-              <div className="calendar-grid">
-                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-                  <div key={d}>{d}</div>
+          {/* SESSION REQUESTS TAB */}
+          {activeTab === "requests" && (
+            <div className="tab-panel">
+              <div className="dash-card">
+                <h3>📩 Session Requests</h3>
+
+                {sessionRequests.length === 0 && <p>No pending requests</p>}
+
+                {sessionRequests.map((r) => (
+                  <div key={r._id} className="request-row">
+                    <div>
+                      <strong>{r.studentName}</strong>
+                      <p className="time">
+                        {format(new Date(r.time), "MMM dd, hh:mm a")}
+                      </p>
+                      <span>{subjectLabel(r.subject)}</span>
+                    </div>
+                    <div className="actions">
+                      <button
+                        className="accept-btn"
+                        onClick={() => handleAccept(r._id)}
+                      >
+                        Accept
+                      </button>
+                      <button
+                        className="reject-btn"
+                        onClick={() => handleReject(r._id)}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </div>
                 ))}
-
-                {daysInMonth(currentMonth).map((day) => {
-                  const sessions = sessionsByDate(day);
-                  return (
-                    <div
-                      key={day.getTime()}
-                      className={
-                        sessions.length
-                          ? "calendar-day has-session"
-                          : "calendar-day"
-                      }
-                      onClick={() => sessions.length && setSelectedDate(day)}
-                    >
-                      <span>{day.getDate()}</span>
-                      {sessions.map((s, i) => (
-                        <span key={i} className="dot"></span>
-                      ))}
-                    </div>
-                  );
-                })}
               </div>
             </div>
+          )}
 
-            {/* SESSION REQUESTS */}
-            <div className="dash-card">
-              <h3>📩 Session Requests</h3>
+          {/* SESSION CALENDAR TAB */}
+          {activeTab === "calendar" && (
+            <div className="tab-panel">
+              <div className="dash-card">
+                <h3>📅 Session Calendar</h3>
+                <p className="calendar-hint">
+                  Click on a date with sessions to view details
+                </p>
+                <div className="calendar-header">
+                  <button
+                    type="button"
+                    className="edit-btn calendar-arrow-btn"
+                    onClick={handlePrevMonth}
+                    aria-label="Previous month"
+                  >
+                    ◀
+                  </button>
+                  <span>{format(currentMonth, "MMMM yyyy")}</span>
+                  <button
+                    type="button"
+                    className="edit-btn calendar-arrow-btn"
+                    onClick={handleNextMonth}
+                    aria-label="Next month"
+                  >
+                    ▶
+                  </button>
+                </div>
 
-              {sessionRequests.length === 0 && <p>No requests</p>}
+                <div className="calendar-grid">
+                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+                    <div key={d}>{d}</div>
+                  ))}
 
-              {sessionRequests.map((r) => (
-                <div key={r._id} className="request-row">
-                  <div>
-                    <strong>{r.studentName}</strong>
-                    <p className="time">
-                      {format(new Date(r.time), "MMM dd, hh:mm a")}
-                    </p>
-                    <span>{subjectLabel(r.subject)}</span>
+                  {daysInMonth(currentMonth).map((day) => {
+                    const sessions = sessionsByDate(day);
+                    return (
+                      <div
+                        key={day.getTime()}
+                        className={
+                          sessions.length
+                            ? "calendar-day has-session"
+                            : "calendar-day"
+                        }
+                        onClick={() => sessions.length && setSelectedDate(day)}
+                      >
+                        <span>{day.getDate()}</span>
+                        {sessions.map((s, i) => (
+                          <span key={i} className="dot"></span>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* RATINGS TAB */}
+          {activeTab === "ratings" && (
+            <div className="tab-panel">
+              <div className="dash-card">
+                <h3>⭐ Ratings & Feedback</h3>
+                {feedbackList.length === 0 && (
+                  <p className="ratings-empty">No feedback yet from students.</p>
+                )}
+                {feedbackList.map((r) => (
+                  <div key={r._id} className="rating-row">
+                    <div className="rating-header">
+                      <strong>{r.student}</strong>
+                      <span className="rating-subject">
+                        {subjectLabel(r.subject)}
+                      </span>
+                      <div className="stars">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <span
+                            key={star}
+                            className={star <= r.rating ? "star filled" : "star"}
+                          >
+                            ★
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    {r.feedback ? (
+                      <span className="feedback">&ldquo;{r.feedback}&rdquo;</span>
+                    ) : (
+                      <span className="feedback muted">No written comment</span>
+                    )}
+                    <div className="rating-date">
+                      {r.submittedAt
+                        ? format(new Date(r.submittedAt), "MMM d, yyyy")
+                        : ""}
+                    </div>
                   </div>
-                  <div className="actions">
-                    <button
-                      className="accept-btn"
-                      onClick={() => handleAccept(r._id)}
-                    >
-                      Accept
-                    </button>
-                    <button
-                      className="reject-btn"
-                      onClick={() => handleReject(r._id)}
-                    >
-                      Reject
-                    </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* REPORT TAB */}
+          {activeTab === "report" && (
+            <div className="tab-panel">
+              <div className="dash-card">
+                <h3>📊 Generate Session Report</h3>
+                <p className="calendar-hint">
+                  Select date range and download your session report as PDF
+                </p>
+                <div className="report-filters">
+                  <div className="filter-group">
+                    <label htmlFor="report-start">Start Date:</label>
+                    <input
+                      id="report-start"
+                      type="date"
+                      value={reportStartDate}
+                      onChange={(e) => setReportStartDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="filter-group">
+                    <label htmlFor="report-end">End Date:</label>
+                    <input
+                      id="report-end"
+                      type="date"
+                      value={reportEndDate}
+                      onChange={(e) => setReportEndDate(e.target.value)}
+                    />
                   </div>
                 </div>
-              ))}
+                <button
+                  type="button"
+                  className="edit-btn report-generate-btn"
+                  onClick={exportReportPdf}
+                  disabled={pdfLoading}
+                >
+                  {pdfLoading ? "Generating PDF..." : "Generate PDF Report"}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </section>
       </main>
 
-      {/* MODALS remain EXACTLY SAME */}
+      {/* MODALS */}
       {editing && (
         <div className="modal-overlay">
           <div className="modal-card profile-modal bigger-modal profile-edit-modal">
