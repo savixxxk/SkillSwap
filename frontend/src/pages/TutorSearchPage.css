@@ -201,6 +201,29 @@
   text-align: center;
 }
 
+.search-filter-panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(239, 246, 255, 0.92) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.14);
+  border-radius: 28px;
+  padding: 28px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+  position: relative;
+  overflow: hidden;
+}
+
+.search-filter-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 5px;
+  background: linear-gradient(90deg, #2563eb 0%, #60a5fa 50%, #93c5fd 100%);
+}
+
+.search-filter-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
 /* Star Rating Styles */
 .search-star-row {
   display: inline-flex;
@@ -248,6 +271,11 @@
   .tutor-tools-grid {
     grid-template-columns: 1fr;
     gap: 24px;
+  }
+
+  .search-filter-panel {
+    padding: 18px;
+    border-radius: 22px;
   }
 }
 
