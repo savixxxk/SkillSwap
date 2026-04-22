@@ -11,7 +11,11 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [ratings, setRatings] = useState([]);
+  const [quizzes, setQuizzes] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [editingQuiz, setEditingQuiz] = useState(null);
+  const [quizSaving, setQuizSaving] = useState(false);
+  const [quizDeletingId, setQuizDeletingId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("users");
@@ -46,11 +50,13 @@ export default function AdminDashboard() {
       API.get("/admin/users"),
       API.get("/admin/sessions"),
       API.get("/admin/tutor-ratings"),
+      API.get("/api/admin/quizzes"),
     ])
-      .then(([usersRes, sessionsRes, ratingsRes]) => {
+      .then(([usersRes, sessionsRes, ratingsRes, quizzesRes]) => {
         setUsers(usersRes.data || []);
         setSessions(sessionsRes.data || []);
         setRatings(ratingsRes.data || []);
+        setQuizzes(quizzesRes.data || []);
       })
       .catch((err) => {
         setError(err.response?.data?.message || "Unable to load admin data.");
@@ -79,6 +85,52 @@ export default function AdminDashboard() {
   };
 
   const closeUser = () => setSelectedUser(null);
+
+  const openEditQuiz = (quiz) => {
+    setEditingQuiz({
+      _id: quiz._id,
+      title: quiz.title,
+      subject: quiz.subject,
+      passMark: quiz.passMark,
+    });
+  };
+
+  const closeEditQuiz = () => setEditingQuiz(null);
+
+  const saveQuiz = async () => {
+    if (!editingQuiz) return;
+    setQuizSaving(true);
+    try {
+      const payload = {
+        title: editingQuiz.title,
+        subject: editingQuiz.subject,
+        passMark: Number(editingQuiz.passMark),
+      };
+      const res = await API.put(`/api/admin/quizzes/${editingQuiz._id}`, payload);
+      setQuizzes((prev) => prev.map((q) => (q._id === res.data._id ? res.data : q)));
+      setEditingQuiz(null);
+      setError("");
+    } catch (err) {
+      setError(err.response?.data?.message || "Unable to update quiz.");
+    } finally {
+      setQuizSaving(false);
+    }
+  };
+
+  const removeQuiz = async (quizId) => {
+    const shouldDelete = window.confirm("Delete this quiz? This action cannot be undone.");
+    if (!shouldDelete) return;
+    setQuizDeletingId(quizId);
+    try {
+      await API.delete(`/api/admin/quizzes/${quizId}`);
+      setQuizzes((prev) => prev.filter((q) => q._id !== quizId));
+      setError("");
+    } catch (err) {
+      setError(err.response?.data?.message || "Unable to delete quiz.");
+    } finally {
+      setQuizDeletingId("");
+    }
+  };
 
   const setBlocked = async (userId, nextBlocked) => {
     setBusyUserId(userId);
@@ -269,10 +321,17 @@ export default function AdminDashboard() {
                 <span className="admin-badge">Admin Control Center</span>
                 <h2>Welcome back, {me?.name || "Admin"}</h2>
                 <p className="admin-intro">
-               
+                  Track platform health, manage users, and export reports from one place.
                 </p>
               </div>
               <div className="summary-actions">
+                <button
+                  type="button"
+                  className="row-btn quiz-btn"
+                  onClick={() => navigate('/admin/quiz/create')}
+                >
+                  Create Quiz
+                </button>
                 <button
                   type="button"
                   className="row-btn logout-btn"
@@ -394,7 +453,7 @@ export default function AdminDashboard() {
               }
               onClick={() => setActiveTab("users")}
             >
-              Users
+              Users Management
             </button>
             <button
               type="button"
@@ -412,7 +471,16 @@ export default function AdminDashboard() {
               }
               onClick={() => setActiveTab("sessions")}
             >
-              Sessions
+              Sessions Overview
+            </button>
+            <button
+              type="button"
+              className={
+                activeTab === "quizzes" ? "admin-tab active" : "admin-tab"
+              }
+              onClick={() => setActiveTab("quizzes")}
+            >
+              Manage Quizzes
             </button>
             <button
               type="button"
@@ -617,6 +685,71 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
+
+              {activeTab === "quizzes" && (
+                <div className="admin-card list-card wide-card">
+                  <div className="list-header">
+                    <div>
+                      <h3>Manage Quizzes</h3>
+                      <p className="tab-subtitle">
+                        Review, update, or remove quizzes created by admins.
+                      </p>
+                    </div>
+                    <span>{quizzes.length} total</span>
+                  </div>
+                  <div className="table-scroll">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Title</th>
+                          <th>Subject</th>
+                          <th>Pass Mark</th>
+                          <th>Created By</th>
+                          <th>Created At</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {quizzes.map((quiz) => (
+                          <tr key={quiz._id}>
+                            <td>{quiz.title}</td>
+                            <td>{quiz.subject}</td>
+                            <td>{quiz.passMark}%</td>
+                            <td>{quiz.createdBy?.name || quiz.createdBy?.email || "Unknown"}</td>
+                            <td>{new Date(quiz.createdAt).toLocaleString()}</td>
+                            <td>
+                              <div className="actions-inline">
+                                <button
+                                  className="row-btn"
+                                  type="button"
+                                  onClick={() => openEditQuiz(quiz)}
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  className="row-btn block-btn"
+                                  type="button"
+                                  disabled={quizDeletingId === quiz._id}
+                                  onClick={() => removeQuiz(quiz._id)}
+                                >
+                                  {quizDeletingId === quiz._id ? "Deleting..." : "Delete"}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        {quizzes.length === 0 && (
+                          <tr>
+                            <td colSpan={6} className="empty-row">
+                              No quizzes found. Create your first quiz to get started.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </section>
@@ -648,6 +781,56 @@ export default function AdminDashboard() {
                   ))}
                 </ul>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingQuiz && (
+        <div className="modal-overlay" onClick={closeEditQuiz}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Edit Quiz</h2>
+              <button className="close-btn" type="button" onClick={closeEditQuiz}>
+                ×
+              </button>
+            </div>
+            <div className="quiz-edit-form">
+              <label htmlFor="quiz-title">Title</label>
+              <input
+                id="quiz-title"
+                value={editingQuiz.title}
+                onChange={(e) =>
+                  setEditingQuiz((prev) => ({ ...prev, title: e.target.value }))
+                }
+              />
+              <label htmlFor="quiz-subject">Subject</label>
+              <input
+                id="quiz-subject"
+                value={editingQuiz.subject}
+                onChange={(e) =>
+                  setEditingQuiz((prev) => ({ ...prev, subject: e.target.value }))
+                }
+              />
+              <label htmlFor="quiz-passmark">Pass Mark</label>
+              <input
+                id="quiz-passmark"
+                type="number"
+                min="0"
+                max="100"
+                value={editingQuiz.passMark}
+                onChange={(e) =>
+                  setEditingQuiz((prev) => ({ ...prev, passMark: e.target.value }))
+                }
+              />
+              <div className="quiz-edit-actions">
+                <button type="button" className="row-btn logout-btn" onClick={closeEditQuiz}>
+                  Cancel
+                </button>
+                <button type="button" className="row-btn" disabled={quizSaving} onClick={saveQuiz}>
+                  {quizSaving ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
             </div>
           </div>
         </div>

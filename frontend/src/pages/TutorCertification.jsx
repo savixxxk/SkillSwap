@@ -1,300 +1,148 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import API from "../services/api";
-import "./TutorCertification.css";
-
-function readStoredUser() {
-  try {
-    const raw = localStorage.getItem("user");
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-function subjectPassed(user, subjectId) {
-  return (user?.examAttempts || []).some(
-    (a) => a.subjectId === subjectId && a.passed
-  );
-}
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getQuizzes } from '../services/quizService';
+import './TutorCertification.css';
 
 export default function TutorCertification() {
-  const navigate = useNavigate();
-  const [user, setUser] = useState(readStoredUser);
-  const [subjectsCatalog, setSubjectsCatalog] = useState([]);
-  const [passPercent, setPassPercent] = useState(70);
-  const [selectedIds, setSelectedIds] = useState([]);
-  const [activeExamSubject, setActiveExamSubject] = useState(null);
-  const [examQuestions, setExamQuestions] = useState([]);
-  const [answers, setAnswers] = useState([]);
-  const [error, setError] = useState("");
+  const [subjects, setSubjects] = useState([]);
+  const [me, setMe] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [savingSubjects, setSavingSubjects] = useState(false);
-  const [submittingExam, setSubmittingExam] = useState(false);
-
-  const syncUser = useCallback((next) => {
-    setUser(next);
-    localStorage.setItem("user", JSON.stringify(next));
-  }, []);
-
-  const refreshMe = useCallback(async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return null;
-    const res = await API.get("/auth/me");
-    syncUser(res.data.user);
-    return res.data.user;
-  }, [syncUser]);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        navigate("/login", { replace: true });
-        return;
-      }
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
 
+    const rawUser = localStorage.getItem('user');
+    if (rawUser) {
       try {
-        const u = await refreshMe();
-        if (cancelled) return;
-        if (!u || u.role !== "tutor") {
-          navigate("/", { replace: true });
-          return;
-        }
-        if (u.certifiedTutor) {
-          navigate("/", { replace: true });
-          return;
-        }
-
-        const subRes = await API.get("/auth/tutor/exam/subjects");
-        if (cancelled) return;
-        setSubjectsCatalog(subRes.data.subjects || []);
-        setPassPercent(subRes.data.passPercent ?? 70);
-        setSelectedIds(u.teachingSubjects || []);
-      } catch (e) {
-        if (!cancelled) {
-          setError(e.response?.data?.message || "Could not load certification");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
+        setMe(JSON.parse(rawUser));
+      } catch {
+        setMe(null);
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [navigate, refreshMe]);
+    }
 
-  const remainingExamSubjects = useMemo(() => {
-    const list = user?.teachingSubjects || [];
-    return list.filter((id) => !subjectPassed(user, id));
-  }, [user]);
+    Promise.all([getQuizzes(), fetchUser()])
+      .then(([quizRes, meRes]) => {
+        const data = Array.isArray(quizRes.data) ? quizRes.data : quizRes.data?.data || [];
+        setSubjects(data);
+        if (meRes?.user) {
+          setMe(meRes.user);
+          localStorage.setItem('user', JSON.stringify(meRes.user));
+        }
+      })
+      .catch((err) => {
+        console.error('Tutor certification page load error:', err);
+        setError(err.response?.data?.message || 'Failed to load certification page');
+      })
+      .finally(() => setLoading(false));
+  }, [navigate]);
 
-  const toggleSubject = (id) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+  const fetchUser = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    const response = await fetch('http://localhost:5000/auth/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) return null;
+    return response.json();
   };
 
-  const saveSubjects = async () => {
-    setError("");
-    if (selectedIds.length === 0) {
-      setError("Choose at least one university subject you want to teach.");
-      return;
-    }
-    try {
-      setSavingSubjects(true);
-      const res = await API.put("/auth/tutor/teaching-subjects", {
-        subjectIds: selectedIds,
-      });
-      syncUser(res.data.user);
-    } catch (e) {
-      setError(e.response?.data?.message || "Could not save subjects");
-    } finally {
-      setSavingSubjects(false);
-    }
+  const handleSubjectClick = (subject) => {
+    navigate(`/quiz/${subject}`);
   };
 
-  const startExamFor = async (subjectId) => {
-    setError("");
-    setActiveExamSubject(subjectId);
-    setAnswers([]);
-    try {
-      const res = await API.get(`/auth/tutor/exam/${subjectId}/questions`);
-      setExamQuestions(res.data.questions || []);
-      setAnswers(Array((res.data.questions || []).length).fill(-1));
-    } catch (e) {
-      setError(e.response?.data?.message || "Could not load exam");
-      setActiveExamSubject(null);
-      setExamQuestions([]);
-    }
-  };
-
-  const submitExam = async () => {
-    if (!activeExamSubject) return;
-    if (answers.some((a) => a < 0)) {
-      setError("Answer every question before submitting.");
-      return;
-    }
-    setError("");
-    try {
-      setSubmittingExam(true);
-      const res = await API.post("/auth/tutor/exam/submit", {
-        subjectId: activeExamSubject,
-        answers,
-      });
-      syncUser(res.data.user);
-      setActiveExamSubject(null);
-      setExamQuestions([]);
-      if (!res.data.passed) {
-        setError(
-          `Score ${res.data.percent}% — you need at least ${res.data.passPercent}% to pass. Try again.`
-        );
-      } else {
-        setError("");
-      }
-      if (res.data.certifiedTutor) {
-        navigate("/", { replace: true });
-      }
-    } catch (e) {
-      setError(e.response?.data?.message || "Submit failed");
-    } finally {
-      setSubmittingExam(false);
-    }
-  };
+  const certifiedSubjects = Array.isArray(me?.certifiedSubjects)
+    ? me.certifiedSubjects
+    : [];
+  const isCertifiedTutor = Boolean(me?.certifiedTutor);
 
   if (loading) {
     return (
-      <div className="tutor-cert-page">
-        <p className="tutor-cert-loading">Loading certification…</p>
+      <div className="tutor-cert-page-state">
+        <div className="tutor-cert-state-card">
+          <h2>Loading certification subjects</h2>
+          <p>Please wait while we prepare your quiz tracks.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="tutor-cert-page-state">
+        <div className="tutor-cert-state-card error">
+          <h2>Could not load subjects</h2>
+          <p>{error}</p>
+          <button type="button" onClick={() => navigate('/dashboard')}>
+            Back to Dashboard
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="tutor-cert-page">
-      <div className="tutor-cert-panel">
-        <h1>Tutor entrance exam</h1>
-        <p className="tutor-cert-lead">
-          Select the university subjects you want to teach, then pass a short
-          quiz for each (at least {passPercent}% per subject). After you pass
-          all selected subjects, you are certified and can use the site as a
-          tutor.
-        </p>
-
-        {error && <div className="tutor-cert-error">{error}</div>}
-
-        {!activeExamSubject && (
-          <>
-            <section className="tutor-cert-section">
-              <h2>1. Subjects to teach</h2>
-              <div className="tutor-cert-subject-grid">
-                {subjectsCatalog.map((s) => (
-                  <label key={s.id} className="tutor-cert-subject-tile">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(s.id)}
-                      onChange={() => toggleSubject(s.id)}
-                    />
-                    <span>{s.name}</span>
-                  </label>
-                ))}
-              </div>
-              <button
-                type="button"
-                className="tutor-cert-primary"
-                onClick={saveSubjects}
-                disabled={savingSubjects}
-              >
-                {savingSubjects ? "Saving…" : "Save subjects & continue"}
-              </button>
-            </section>
-
-            {user?.teachingSubjects?.length > 0 && (
-              <section className="tutor-cert-section">
-                <h2>2. Exams by subject</h2>
-                {remainingExamSubjects.length === 0 ? (
-                  <p>All selected exams passed. Redirecting…</p>
-                ) : (
-                  <ul className="tutor-cert-exam-list">
-                    {user.teachingSubjects.map((id) => {
-                      const name =
-                        subjectsCatalog.find((x) => x.id === id)?.name || id;
-                      const done = subjectPassed(user, id);
-                      return (
-                        <li key={id}>
-                          <span>{name}</span>
-                          {done ? (
-                            <span className="tutor-cert-badge pass">Passed</span>
-                          ) : (
-                            <button
-                              type="button"
-                              className="tutor-cert-linkish"
-                              onClick={() => startExamFor(id)}
-                            >
-                              Start exam
-                            </button>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </section>
-            )}
-          </>
+    <div className="tutor-certification">
+      <div className="tutor-cert-hero">
+        <p className="tutor-cert-kicker">Tutor Track</p>
+        <h1>Tutor Certification</h1>
+        <p>Choose a subject and complete a quiz to unlock certified tutor status.</p>
+        {isCertifiedTutor && (
+          <div className="tutor-cert-certified-banner">
+            <div>
+              <strong>Status: Certified Tutor</strong>
+              <p>Your account is approved for tutor dashboard access.</p>
+            </div>
+            <button type="button" onClick={() => navigate('/dashboard')}>
+              Go to Tutor Dashboard
+            </button>
+          </div>
         )}
+      </div>
 
-        {activeExamSubject && (
-          <section className="tutor-cert-section tutor-cert-exam-active">
-            <h2>
-              Exam:{" "}
-              {subjectsCatalog.find((x) => x.id === activeExamSubject)?.name ||
-                activeExamSubject}
-            </h2>
+      {isCertifiedTutor && (
+        <section className="tutor-cert-certified-subjects">
+          <h3>Certified Subjects</h3>
+          {certifiedSubjects.length === 0 ? (
+            <p className="tutor-cert-certified-empty">
+              You are certified, but no subjects are listed yet.
+            </p>
+          ) : (
+            <div className="tutor-cert-chip-list">
+              {certifiedSubjects.map((subjectName) => (
+                <span key={subjectName} className="tutor-cert-chip">
+                  {subjectName}
+                </span>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      <div className="subjects-list">
+        {subjects.length === 0 ? (
+          <div className="tutor-cert-empty">
+            <h3>No quizzes available yet</h3>
+            <p>Ask an admin to create quizzes for your subjects.</p>
+          </div>
+        ) : (
+          subjects.map((s) => (
             <button
+              key={s.subject}
+              className="subject-card"
+              onClick={() => handleSubjectClick(s.subject)}
               type="button"
-              className="tutor-cert-back"
-              onClick={() => {
-                setActiveExamSubject(null);
-                setExamQuestions([]);
-                setError("");
-              }}
             >
-              ← Back to list
+              <h3>{s.subject}</h3>
+              <p>{s.quizzes.length} quiz(s) available</p>
+              <span className="subject-card-cta">Start quiz</span>
             </button>
-            {examQuestions.map((q, qi) => (
-              <div key={q.id} className="tutor-cert-question">
-                <p className="tutor-cert-qtext">
-                  {qi + 1}. {q.question}
-                </p>
-                <div className="tutor-cert-options">
-                  {q.options.map((opt, oi) => (
-                    <label key={oi} className="tutor-cert-option">
-                      <input
-                        type="radio"
-                        name={q.id}
-                        checked={answers[qi] === oi}
-                        onChange={() => {
-                          const next = [...answers];
-                          next[qi] = oi;
-                          setAnswers(next);
-                        }}
-                      />
-                      <span>{opt}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            ))}
-            <button
-              type="button"
-              className="tutor-cert-primary"
-              onClick={submitExam}
-              disabled={submittingExam || examQuestions.length === 0}
-            >
-              {submittingExam ? "Submitting…" : "Submit answers"}
-            </button>
-          </section>
+          ))
         )}
       </div>
     </div>

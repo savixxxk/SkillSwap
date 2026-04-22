@@ -21,6 +21,7 @@ const userSchema = new mongoose.Schema(
     bio: { type: String, default: "" },
     profilePic: { type: String, default: "/images/profile.jpg" },
     teachingSubjects: { type: [String], default: [] },
+    certifiedSubjects: { type: [String], default: [] },
     examAttempts: { type: [examAttemptSchema], default: [] },
   },
   { timestamps: true }

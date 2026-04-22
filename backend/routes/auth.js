@@ -23,10 +23,21 @@ function dbUnavailableMessage() {
   return "Database is unavailable. Start MongoDB locally or set MONGO_URI in backend/.env.";
 }
 
+function getJwtSecret() {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET is not configured");
+  }
+  return process.env.JWT_SECRET;
+}
+
+function isJwtConfigError(err) {
+  return err?.message === "JWT_SECRET is not configured";
+}
+
 function signToken(user) {
   return jwt.sign(
     { id: user._id, role: user.role },
-    process.env.JWT_SECRET || "secretkey",
+    getJwtSecret(),
     { expiresIn: "1d" },
   );
 }
@@ -111,6 +122,9 @@ router.post("/register", async (req, res) => {
     });
   } catch (err) {
     console.error(err);
+    if (isJwtConfigError(err)) {
+      return res.status(500).json({ message: "Server auth configuration error" });
+    }
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -154,6 +168,9 @@ router.post("/login", async (req, res) => {
     res.status(200).json({ user: toPublicUser(user), token });
   } catch (err) {
     console.error(err);
+    if (isJwtConfigError(err)) {
+      return res.status(500).json({ message: "Server auth configuration error" });
+    }
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -197,6 +214,9 @@ router.put("/tutor/teaching-subjects", requireAuth, async (req, res) => {
     res.json({ user: toPublicUser(user) });
   } catch (err) {
     console.error(err);
+    if (isJwtConfigError(err)) {
+      return res.status(500).json({ message: "Server auth configuration error" });
+    }
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -315,6 +335,45 @@ router.patch("/profile", requireAuth, async (req, res) => {
     }
     await user.save();
     res.json({ user: toPublicUser(user) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// POST /auth/setup-admin — Setup admin user (first-time only)
+router.post("/setup-admin", async (req, res) => {
+  try {
+    if (!isDbReady()) {
+      return res.status(503).json({ message: dbUnavailableMessage() });
+    }
+
+    // Check if admin already exists
+    const adminExists = await User.findOne({ role: "admin" });
+    if (adminExists) {
+      return res.status(400).json({ message: "Admin user already exists" });
+    }
+
+    // Create admin user
+    const hashedPassword = await bcrypt.hash("Adminhansika", 10);
+    const admin = await User.create({
+      name: "Admin Hansika",
+      email: "adminhansika@gmail.com",
+      password: hashedPassword,
+      role: "admin",
+      isBlocked: false,
+      certifiedTutor: false,
+      bio: "Administrator",
+      profilePic: "/images/profile.jpg",
+      teachingSubjects: [],
+      certifiedSubjects: []
+    });
+
+    res.json({
+      message: "Admin user created successfully",
+      user: toPublicUser(admin),
+      token: signToken(admin)
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });

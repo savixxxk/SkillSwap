@@ -7,6 +7,8 @@ import authRoutes from "./routes/auth.js";
 import sessionRoutes from "./routes/session.js";
 import tutorDirectoryRoutes from "./routes/tutorDirectory.js";
 import adminRoutes from "./routes/admin.js";
+import adminQuizRoutes from "./routes/adminQuizRoutes.js";
+import tutorQuizRoutes from "./routes/tutorQuizRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -35,6 +37,8 @@ app.use("/auth", authRoutes);
 app.use("/sessions", sessionRoutes);
 app.use("/tutors", tutorDirectoryRoutes);
 app.use("/admin", adminRoutes);
+app.use("/api/admin", adminQuizRoutes);
+app.use("/api/tutor", tutorQuizRoutes);
 
 const mongoUri = process.env.MONGO_URI;
 if (!mongoUri) {

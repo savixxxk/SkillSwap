@@ -5,7 +5,9 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminQuizCreation from "./pages/AdminQuizCreation";
 import TutorCertification from "./pages/TutorCertification";
+import QuizPage from "./pages/QuizPage";
 import TutorSearchPage from "./pages/TutorSearchPage";
 import StudentProfilePage from "./pages/StudentProfilePage";
 import StudentSearch from "./pages/StudentSearch";
@@ -19,7 +21,9 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/quiz/create" element={<AdminQuizCreation />} />
         <Route path="/tutor/certification" element={<TutorCertification />} />
+        <Route path="/quiz/:subject" element={<QuizPage />} />
         <Route path="/tutor-search" element={<TutorSearchPage />} />
         <Route path="/student-search" element={<StudentSearch />} />
         <Route path="/student-profile" element={<StudentProfilePage />} />

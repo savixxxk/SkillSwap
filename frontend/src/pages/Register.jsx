@@ -106,6 +106,8 @@ export default function Register() {
         role,
         ...(role === "admin" && { adminCode: form.adminCode })
       });
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("jwtToken");
       localStorage.setItem("user", JSON.stringify(response.data.user));
       localStorage.setItem("token", response.data.token);
       navigate(getPostAuthPath(response.data.user), { replace: true });

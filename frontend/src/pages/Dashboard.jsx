@@ -414,6 +414,12 @@ export default function TutorDashboard() {
           >
             📊 Generate Report
           </button>
+          <button
+            className="dashboard-tab"
+            onClick={() => navigate("/tutor/certification")}
+          >
+            ✅ Certification
+          </button>
         </div>
 
         {/* TAB CONTENTS */}

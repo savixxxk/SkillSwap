@@ -58,6 +58,8 @@ export default function Login() {
     setLoading(true);
     try {
       const response = await api.post("/auth/login", { email, password });
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("jwtToken");
       localStorage.setItem("user", JSON.stringify(response.data.user));
       localStorage.setItem("token", response.data.token);
       navigate(getPostAuthPath(response.data.user), { replace: true });
