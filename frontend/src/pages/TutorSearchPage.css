@@ -1,0 +1,346 @@
+/* Tutor Search Page CSS - Same styling as Enhanced Search */
+
+/* CSS Variables - Same as AvailableTutors */
+:root {
+  --primary-blue: #3B82F6;
+  --text-dark: #1f2937;
+  --text-light: #6b7280;
+  --border-light: #e5e7eb;
+  --white: #ffffff;
+  --dark-navy: #1e293b;
+}
+
+/* Base styles */
+.tutor-search-page {
+  min-height: 100vh;
+  background-color: #f8fafc;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Tutor-specific Hero Section */
+.tutor-hero-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 60px 0;
+  color: white;
+}
+
+.tutor-hero-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 40px;
+}
+
+.tutor-welcome h1 {
+  font-size: 48px;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+  line-height: 1.2;
+}
+
+.tutor-welcome p {
+  font-size: 18px;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.tutor-quick-stats {
+  display: flex;
+  gap: 24px;
+}
+
+.quick-stat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 16px 20px;
+  border-radius: 12px;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.quick-stat h3 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+}
+
+.quick-stat p {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Tutor Tools Grid */
+.tutor-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 32px;
+}
+
+.tool-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-light);
+  transition: all 0.3s ease;
+}
+
+.tool-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.tool-card svg {
+  color: var(--primary-blue);
+  margin-bottom: 16px;
+}
+
+.tool-card h3 {
+  margin: 0 0 12px 0;
+  color: var(--text-dark);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.tool-card p {
+  margin: 0 0 24px 0;
+  color: var(--text-light);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  color: var(--primary-blue);
+  font-weight: 500;
+  font-size: 18px;
+}
+
+/* Button Styles */
+.btn-primary {
+  background: var(--primary-blue);
+  color: var(--white);
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.btn-primary:hover {
+  background: var(--dark-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--primary-blue);
+  border: 2px solid var(--primary-blue);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.btn-outline:hover {
+  background: var(--primary-blue);
+  color: var(--white);
+  transform: translateY(-2px);
+}
+
+/* Section Labels */
+.section-label {
+  display: inline-block;
+  padding: 6px 16px;
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--primary-blue);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.section-label.dark-context {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--white);
+}
+
+/* Text Center Utility */
+.text-center {
+  text-align: center;
+}
+
+.search-filter-panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(239, 246, 255, 0.92) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.14);
+  border-radius: 28px;
+  padding: 28px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+  position: relative;
+  overflow: hidden;
+}
+
+.search-filter-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 5px;
+  background: linear-gradient(90deg, #2563eb 0%, #60a5fa 50%, #93c5fd 100%);
+}
+
+.search-filter-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Star Rating Styles */
+.search-star-row {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.search-star {
+  color: #d1d5db;
+  font-size: 14px;
+}
+
+.search-star.filled {
+  color: #f59e0b;
+}
+
+.search-star.lg {
+  font-size: 18px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 16px;
+  }
+  
+  .tutor-hero-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 32px;
+  }
+  
+  .tutor-welcome h1 {
+    font-size: 32px;
+  }
+  
+  .tutor-quick-stats {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .quick-stat {
+    justify-content: center;
+  }
+  
+  .tutor-tools-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .search-filter-panel {
+    padding: 18px;
+    border-radius: 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tutor-hero-section {
+    padding: 40px 0;
+  }
+  
+  .tutor-welcome h1 {
+    font-size: 28px;
+  }
+  
+  .tutor-welcome p {
+    font-size: 16px;
+  }
+  
+  .quick-stat {
+    padding: 12px 16px;
+  }
+  
+  .quick-stat h3 {
+    font-size: 20px;
+  }
+  
+  .tool-card {
+    padding: 24px;
+  }
+  
+  .section-label {
+    font-size: 10px;
+    padding: 4px 12px;
+  }
+  
+  .btn-primary,
+  .btn-outline {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus styles for accessibility */
+button:focus,
+input:focus,
+select:focus {
+  outline: 2px solid var(--primary-blue);
+  outline-offset: 2px;
+}
+
+/* Remove default button styles */
+button {
+  font-family: inherit;
+}
+
+/* Link styles */
+a {
+  color: var(--primary-blue);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: var(--dark-blue);
+}
