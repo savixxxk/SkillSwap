@@ -1,17 +1,17 @@
-﻿import { useState } from "react";
-import { useNavigate, NavLink } from "react-router-dom";
-import { Eye, EyeOff, ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import api from "../services/api";
 import { getPostAuthPath } from "../utils/authRedirect";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8081";
+const heroImage = "/images/login-bg.jpg";
+
 export default function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
+  const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const validateEmail = (email) => {
@@ -27,37 +27,30 @@ export default function Login() {
     return "";
   };
 
-  const handleEmailChange = (e) => {
-    const value = e.target.value;
-    setEmail(value);
+  const onChange = (event) => {
+    const { name, value } = event.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
     setError("");
-    setEmailError(validateEmail(value));
   };
 
-  const handlePasswordChange = (e) => {
-    const value = e.target.value;
-    setPassword(value);
-    setError("");
-    setPasswordError(validatePassword(value));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (event) => {
+    event.preventDefault();
     setError("");
 
-    const emailErr = validateEmail(email);
-    const passwordErr = validatePassword(password);
-
-    setEmailError(emailErr);
-    setPasswordError(passwordErr);
-
-    if (emailErr || passwordErr) {
+    const emailError = validateEmail(form.email);
+    const passwordError = validatePassword(form.password);
+    if (emailError) {
+      setError(emailError);
+      return;
+    }
+    if (passwordError) {
+      setError(passwordError);
       return;
     }
 
     setLoading(true);
     try {
-      const response = await api.post("/auth/login", { email, password });
+      const response = await api.post("/auth/login", form);
       localStorage.removeItem("authToken");
       localStorage.removeItem("jwtToken");
       localStorage.setItem("user", JSON.stringify(response.data.user));
@@ -77,115 +70,96 @@ export default function Login() {
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") handleSubmit(e);
-  };
-
   return (
-    <div className="min-h-screen bg-[#081121] flex items-center justify-center px-4 py-12 relative overflow-hidden">
-      <div className="absolute inset-0 -z-10 pointer-events-none">
-        <div className="absolute -top-24 -left-24 w-[28rem] h-[28rem] bg-blue-500/25 rounded-full blur-3xl animate-pulse" />
-        <div
-          className="absolute -bottom-24 -right-24 w-[28rem] h-[28rem] bg-cyan-500/10 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s" }}
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_55%)]" />
-      </div>
+    <main className="relative min-h-screen overflow-hidden bg-slate-950 px-6 py-12 text-slate-100">
+      <div className="pointer-events-none absolute -left-24 top-16 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl floating-blob" />
+      <div className="pointer-events-none absolute -right-16 bottom-8 h-72 w-72 rounded-full bg-blue-400/20 blur-3xl floating-blob floating-blob-delay" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(14,165,233,0.15),transparent_55%)]" />
 
-      <div className="w-full max-w-md z-10">
-        <div className="text-center mb-10 relative">
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-2 relative z-10 tracking-tight">
-            Welcome Back
-          </h1>
-          <p className="text-blue-100/80 text-base sm:text-lg relative z-10">
-            Sign in to your account
-          </p>
+      <section className="relative mx-auto grid w-full max-w-6xl overflow-hidden rounded-3xl border border-white/15 bg-slate-900/60 shadow-[0_30px_80px_-30px_rgba(30,64,175,0.5)] backdrop-blur md:grid-cols-2">
+        <div className="hidden md:block">
+          <img
+            src={heroImage}
+            alt="Students studying together"
+            className="h-full w-full object-cover"
+          />
         </div>
 
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 sm:p-10 space-y-6 shadow-2xl shadow-black/30">
-          {error && (
-            <div className="p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm font-medium">
-              {error}
-            </div>
-          )}
+        <div className="flex items-center justify-center px-6 py-10 md:px-10 md:py-14">
+          <div className="fade-up w-full max-w-md">
+            <p className="inline-flex rounded-full border border-cyan-300/40 bg-cyan-300/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-cyan-100">
+              Secure Access
+            </p>
+            <h1 className="mt-4 text-3xl font-extrabold text-white">Login</h1>
+            <p className="mt-2 text-sm text-slate-300">Welcome back to SkillSwap.</p>
 
-          <div>
-            <label className="block text-sm font-medium text-blue-100 mb-3">
-              Email Address
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={handleEmailChange}
-              onKeyDown={handleKeyPress}
-              placeholder="you@example.com"
-              style={{ color: "#000000", caretColor: "#000000" }}
-              className={`w-full px-4 py-3 bg-white border rounded-xl text-black placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition-all ${
-                emailError ? "border-red-400" : "border-white/15"
-              }`}
-            />
-            {emailError && (
-              <p className="mt-2 text-red-300 text-sm">{emailError}</p>
-            )}
-          </div>
+            <form onSubmit={onSubmit} className="mt-6 space-y-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-200">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={onChange}
+                  required
+                  placeholder="you@example.com"
+                  className="w-full rounded-lg border border-slate-600 bg-slate-950/80 px-3 py-2 text-white outline-none ring-cyan-300/60 transition placeholder:text-slate-500 focus:ring"
+                />
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-blue-100 mb-3">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={handlePasswordChange}
-                onKeyDown={handleKeyPress}
-                placeholder="••••••••"
-                style={{ color: "#000000", caretColor: "#000000" }}
-                className={`w-full px-4 py-3 bg-white border rounded-xl text-black placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition-all pr-12 ${
-                  passwordError ? "border-red-400" : "border-white/15"
-                }`}
-              />
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-200">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={form.password}
+                    onChange={onChange}
+                    required
+                    placeholder="••••••••"
+                    className="w-full rounded-lg border border-slate-600 bg-slate-950/80 px-3 py-2 pr-12 text-white outline-none ring-cyan-300/60 transition placeholder:text-slate-500 focus:ring"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-2.5 text-slate-400 transition-colors hover:text-slate-200"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              </div>
+
+              {error ? <p className="text-sm text-red-300">{error}</p> : null}
+
               <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3.5 text-blue-300 hover:text-white transition-colors p-1"
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-lg bg-cyan-400 px-4 py-2 font-bold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {loading ? "Logging in..." : "Login"}
               </button>
-            </div>
-            {passwordError && (
-              <p className="mt-2 text-red-300 text-sm">{passwordError}</p>
-            )}
+
+              <a
+                href={`${API_BASE}/oauth2/authorization/google`}
+                className="flex w-full items-center justify-center rounded-lg border border-slate-600 bg-slate-950/60 px-4 py-2 font-semibold text-white transition hover:border-cyan-300 hover:bg-slate-900"
+              >
+                Continue with Google
+              </a>
+            </form>
+
+            <p className="mt-6 text-sm text-slate-300">
+              New user?{" "}
+              <Link to="/register" className="font-semibold text-cyan-200 underline">
+                Create an account
+              </Link>
+            </p>
           </div>
-
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-slate-500 disabled:to-slate-600 text-white font-semibold rounded-lg transition-all transform hover:scale-105 hover:shadow-lg shadow-md flex items-center justify-center gap-2"
-          >
-            {loading ? "Signing in..." : "Sign In"}{" "}
-            {!loading && <ArrowRight size={20} />}
-          </button>
         </div>
-
-        <div className="mt-8 text-center space-y-3">
-          <p className="text-blue-100/85 text-sm sm:text-base">
-            Don&apos;t have an account?{" "}
-            <NavLink
-              to="/register"
-              className="text-cyan-300 hover:text-cyan-200 font-semibold underline underline-offset-2"
-            >
-              Sign up
-            </NavLink>
-          </p>
-          <NavLink
-            to="/"
-            className="text-blue-200/80 hover:text-white text-sm transition-colors"
-          >
-            ← Back to home
-          </NavLink>
-        </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

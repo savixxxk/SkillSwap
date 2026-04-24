@@ -224,6 +224,13 @@
     display: none;
 }
 
+.dashboard-theme-toggle {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
 /* TAB CONTENT */
 .dashboard-tabs-content {
     animation: fadeIn 0.3s ease;
@@ -701,6 +708,129 @@
     color: #fbbf24;
 }
 
+/* Light theme mode for tutor profile dashboard */
+.dashboard-container.profile-theme-light {
+    background:
+        radial-gradient(circle at 10% 8%, rgba(14, 165, 233, 0.12), transparent 34%),
+        radial-gradient(circle at 90% 10%, rgba(16, 185, 129, 0.08), transparent 30%),
+        #eef4ff;
+    color: #0f172a;
+}
+
+.dashboard-container.profile-theme-light .dashboard-hero {
+    background: linear-gradient(135deg, #e8f2ff 0%, #dceaff 50%, #c8defe 100%);
+    border-color: rgba(32, 98, 255, 0.2);
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.1);
+}
+
+.dashboard-container.profile-theme-light .dashboard-hero-text h1,
+.dashboard-container.profile-theme-light .dashboard-hero-text p {
+    color: #0f172a;
+}
+
+.dashboard-container.profile-theme-light .dashboard-quick-stat,
+.dashboard-container.profile-theme-light .profile-panel.fill-left,
+.dashboard-container.profile-theme-light .profile-panel.small,
+.dashboard-container.profile-theme-light .dash-card,
+.dashboard-container.profile-theme-light .calendar-day,
+.dashboard-container.profile-theme-light .modal-card {
+    background: #ffffff;
+    border-color: rgba(32, 98, 255, 0.16);
+    color: #0f172a;
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+}
+
+.dashboard-container.profile-theme-light .dashboard-tab {
+    background: #ffffff;
+    border-color: rgba(32, 98, 255, 0.2);
+    color: #1d4ed8;
+}
+
+.dashboard-container.profile-theme-light .dashboard-tab:hover {
+    background: rgba(32, 98, 255, 0.08);
+    border-color: rgba(32, 98, 255, 0.35);
+}
+
+.dashboard-container.profile-theme-light .dashboard-tab.active {
+    background: linear-gradient(135deg, #2062ff, #0ea5e9);
+    color: #ffffff;
+    border-color: transparent;
+}
+
+.dashboard-container.profile-theme-light .dash-card h3,
+.dashboard-container.profile-theme-light .profile-display-name,
+.dashboard-container.profile-theme-light .request-row strong,
+.dashboard-container.profile-theme-light .rating-header strong,
+.dashboard-container.profile-theme-light .calendar-header span,
+.dashboard-container.profile-theme-light .session-popup-time,
+.dashboard-container.profile-theme-light .profile-panel p strong,
+.dashboard-container.profile-theme-light .calendar-day span,
+.dashboard-container.profile-theme-light .profile-field label,
+.dashboard-container.profile-theme-light .filter-group label,
+.dashboard-container.profile-theme-light .profile-edit-modal .profile-edit-label {
+    color: #0f172a;
+}
+
+.dashboard-container.profile-theme-light .dash-card p,
+.dashboard-container.profile-theme-light .profile-panel p,
+.dashboard-container.profile-theme-light .calendar-hint,
+.dashboard-container.profile-theme-light .request-row,
+.dashboard-container.profile-theme-light .feedback,
+.dashboard-container.profile-theme-light .rating-subject,
+.dashboard-container.profile-theme-light .rating-date,
+.dashboard-container.profile-theme-light .ratings-empty {
+    color: #475569;
+}
+
+.dashboard-container.profile-theme-light .request-row,
+.dashboard-container.profile-theme-light .rating-row,
+.dashboard-container.profile-theme-light .session-popup-row {
+    border-bottom-color: rgba(148, 163, 184, 0.3);
+}
+
+.dashboard-container.profile-theme-light .calendar-arrow-btn {
+    background: #ffffff;
+    color: #0f172a;
+    border-color: rgba(32, 98, 255, 0.2);
+}
+
+.dashboard-container.profile-theme-light .calendar-arrow-btn:hover {
+    background: rgba(32, 98, 255, 0.08);
+}
+
+.dashboard-container.profile-theme-light .calendar-day.has-session {
+    background: rgba(56, 189, 248, 0.14);
+    border-color: rgba(56, 189, 248, 0.45);
+}
+
+.dashboard-container.profile-theme-light .calendar-day.has-session:hover {
+    background: rgba(56, 189, 248, 0.2);
+}
+
+.dashboard-container.profile-theme-light .edit-btn,
+.dashboard-container.profile-theme-light .report-generate-btn,
+.dashboard-container.profile-theme-light .modal-actions button,
+.dashboard-container.profile-theme-light .gradient-btn,
+.dashboard-container.profile-theme-light .profile-upload-label {
+    background: linear-gradient(135deg, #2062ff, #0ea5e9);
+    color: #ffffff;
+    border-color: transparent;
+}
+
+.dashboard-container.profile-theme-light .profile-field input[type="text"],
+.dashboard-container.profile-theme-light .profile-field textarea,
+.dashboard-container.profile-theme-light .profile-edit-modal .profile-edit-bio,
+.dashboard-container.profile-theme-light .filter-group input[type="date"] {
+    background: #f8fbff;
+    border-color: rgba(148, 163, 184, 0.35);
+    color: #0f172a;
+}
+
+.dashboard-container.profile-theme-light .cancel-btn {
+    background: #e2e8f0;
+    color: #334155;
+}
+
 .rating-subject {
     display: block;
     font-size: 0.85rem;
@@ -1117,4 +1247,158 @@
 @keyframes popIn {
     from { opacity: 0; transform: translateY(-20px) scale(0.98); }
     to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Dark theme overrides matching Home page */
+.dashboard-container {
+    background:
+        radial-gradient(circle at 10% 8%, rgba(14, 165, 233, 0.18), transparent 34%),
+        radial-gradient(circle at 90% 10%, rgba(16, 185, 129, 0.14), transparent 30%),
+        #020617;
+    color: #e2e8f0;
+}
+
+.dashboard-hero {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.86), rgba(3, 105, 161, 0.5));
+    border-color: rgba(148, 163, 184, 0.25);
+    box-shadow: 0 30px 80px -35px rgba(34, 211, 238, 0.5);
+}
+
+.dashboard-tab {
+    background: rgba(15, 23, 42, 0.72);
+    border-color: rgba(148, 163, 184, 0.2);
+    color: #e2e8f0;
+}
+
+.dashboard-tab:hover {
+    background: rgba(56, 189, 248, 0.18);
+    border-color: rgba(125, 211, 252, 0.6);
+}
+
+.dashboard-tab.active {
+    background: rgba(56, 189, 248, 0.2);
+    color: #e0f2fe;
+    border-color: rgba(125, 211, 252, 0.7);
+}
+
+.profile-panel.fill-left,
+.profile-panel.small,
+.dash-card,
+.dashboard-quick-stat,
+.calendar-day,
+.table-scroll {
+    background: rgba(15, 23, 42, 0.72);
+    border-color: rgba(148, 163, 184, 0.24);
+    color: #e2e8f0;
+}
+
+.dash-card h3,
+.profile-display-name,
+.request-row strong,
+.rating-header strong,
+.calendar-header span,
+.session-popup-time {
+    color: #f8fafc;
+}
+
+.dash-card p,
+.profile-panel p,
+.calendar-hint,
+.request-row,
+.feedback,
+.rating-subject,
+.rating-date,
+.rating-subject,
+.profile-subtitle,
+.ratings-empty {
+    color: #cbd5e1;
+}
+
+.request-row,
+.rating-row,
+.session-popup-row {
+    border-bottom-color: rgba(148, 163, 184, 0.24);
+}
+
+.accept-btn {
+    background: linear-gradient(135deg, #34d399, #10b981);
+    color: #022c22;
+}
+
+.reject-btn {
+    background: linear-gradient(135deg, #fb7185, #f43f5e);
+    color: #4c0519;
+}
+
+.edit-btn,
+.report-generate-btn {
+    background: linear-gradient(135deg, #38bdf8, #22d3ee);
+    color: #082f49;
+}
+
+.calendar-arrow-btn {
+    background: rgba(15, 23, 42, 0.72);
+    color: #e2e8f0;
+    border-color: rgba(148, 163, 184, 0.24);
+}
+
+.calendar-arrow-btn:hover {
+    background: rgba(56, 189, 248, 0.18);
+}
+
+.calendar-day.has-session {
+    background: rgba(56, 189, 248, 0.18);
+    border-color: rgba(125, 211, 252, 0.6);
+}
+
+.calendar-day.has-session:hover {
+    background: rgba(56, 189, 248, 0.25);
+}
+
+.calendar-day span,
+.profile-field label,
+.filter-group label,
+.profile-edit-modal .profile-edit-label {
+    color: #e2e8f0;
+}
+
+.profile-field input[type="text"],
+.profile-field textarea,
+.profile-edit-modal .profile-edit-bio,
+.filter-group input[type="date"] {
+    background: rgba(2, 6, 23, 0.75);
+    border-color: rgba(148, 163, 184, 0.28);
+    color: #f8fafc;
+}
+
+.profile-photo-preview,
+.profile-pic {
+    border-color: rgba(125, 211, 252, 0.5);
+}
+
+.modal-card {
+    background: rgba(15, 23, 42, 0.98);
+    border-color: rgba(148, 163, 184, 0.26);
+    color: #e2e8f0;
+}
+
+.modal-actions button,
+.gradient-btn,
+.profile-upload-label {
+    background: rgba(56, 189, 248, 0.18);
+    border: 1px solid rgba(125, 211, 252, 0.55);
+    color: #e0f2fe;
+}
+
+.cancel-btn {
+    background: rgba(148, 163, 184, 0.2);
+    color: #e2e8f0;
+}
+
+.star {
+    color: #475569;
+}
+
+.star.filled {
+    color: #fbbf24;
 }

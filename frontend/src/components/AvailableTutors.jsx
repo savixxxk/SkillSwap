@@ -7,7 +7,7 @@ const TutorCard = ({ data }) => {
   const navigate = useNavigate();
   
   const handleBookSession = () => {
-    navigate('/booking');
+    navigate('/booking', { state: { tutor: data } });
   };
   return (
     <div className="tutor-card">

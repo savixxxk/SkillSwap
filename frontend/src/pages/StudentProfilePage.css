@@ -5,8 +5,10 @@
   align-items: center;
   gap: 20px;
   padding: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 16px;
+  background: linear-gradient(130deg, #0a1d4f 0%, #13377e 62%, #2062ff 100%);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
   margin-bottom: 32px;
   color: white;
 }
@@ -14,12 +16,13 @@
 .profile-avatar {
   width: 80px;
   height: 80px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.18);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  backdrop-filter: blur(10px);
 }
 
 .profile-info {
@@ -48,7 +51,7 @@
   padding: 12px 20px;
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
+  border-radius: 12px;
   color: white;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -58,7 +61,26 @@
 
 .edit-profile-btn:hover {
   background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
+}
+
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
 }
 
 /* Goals Section */
@@ -71,7 +93,7 @@
   align-items: center;
   gap: 12px;
   margin: 0 0 24px 0;
-  color: #1e3a5f;
+  color: var(--text);
   font-size: 24px;
 }
 
@@ -82,11 +104,11 @@
 }
 
 .goal-card {
-  background: #fff;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e5e7eb;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(32, 98, 255, 0.14);
 }
 
 .goal-header {
@@ -94,7 +116,7 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 16px;
-  color: #3b82f6;
+  color: var(--primary);
   font-weight: 600;
 }
 
@@ -114,7 +136,7 @@
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(90deg, #2062ff, #0ea5e9);
   border-radius: 4px;
   transition: width 0.3s ease;
 }
@@ -127,11 +149,11 @@
 
 /* Goals Edit Form */
 .goals-edit-form {
-  background: #fff;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
   padding: 32px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e5e7eb;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(32, 98, 255, 0.14);
 }
 
 .goal-input-group {
@@ -157,13 +179,23 @@
 
 .goal-input-group input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--primary);
 }
 
 .goal-actions {
   display: flex;
   gap: 12px;
   margin-top: 32px;
+}
+
+.goal-actions .btn-outline {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid rgba(32, 98, 255, 0.5);
+}
+
+.goal-actions .btn-outline:hover {
+  background: var(--primary-soft);
 }
 
 /* Statistics Section */
@@ -176,7 +208,7 @@
   align-items: center;
   gap: 12px;
   margin: 0 0 24px 0;
-  color: #1e3a5f;
+  color: var(--text);
   font-size: 24px;
 }
 
@@ -187,11 +219,11 @@
 }
 
 .stat-card {
-  background: #fff;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e5e7eb;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(32, 98, 255, 0.14);
   display: flex;
   align-items: center;
   gap: 16px;
@@ -200,7 +232,7 @@
 .stat-icon {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(130deg, #2062ff, #0ea5e9);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -212,7 +244,7 @@
   margin: 0 0 4px 0;
   font-size: 24px;
   font-weight: 700;
-  color: #1e3a5f;
+  color: var(--text);
 }
 
 .stat-content p {
@@ -228,7 +260,7 @@
 
 .recent-sessions h2 {
   margin: 0 0 24px 0;
-  color: #1e3a5f;
+  color: var(--text);
   font-size: 24px;
 }
 
@@ -239,11 +271,11 @@
 }
 
 .session-item {
-  background: #fff;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e5e7eb;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(32, 98, 255, 0.14);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -251,7 +283,7 @@
 
 .session-info h4 {
   margin: 0 0 8px 0;
-  color: #1e3a5f;
+  color: var(--text);
   font-size: 18px;
   font-weight: 600;
 }
@@ -283,44 +315,8 @@
 .loading-spinner {
   text-align: center;
   padding: 40px;
-  color: #3b82f6;
+  color: var(--primary);
   font-weight: 500;
-}
-
-/* Button Styles */
-.btn-primary {
-  background: #3b82f6;
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 14px;
-}
-
-.btn-primary:hover {
-  background: #2563eb;
-  transform: translateY(-2px);
-}
-
-.btn-outline {
-  background: transparent;
-  color: #3b82f6;
-  border: 2px solid #3b82f6;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 14px;
-}
-
-.btn-outline:hover {
-  background: #3b82f6;
-  color: white;
-  transform: translateY(-2px);
 }
 
 /* Responsive Design */
@@ -357,6 +353,10 @@
   .edit-profile-btn {
     align-self: center;
   }
+
+  .theme-toggle-btn {
+    align-self: center;
+  }
 }
 
 @media (max-width: 480px) {
@@ -373,4 +373,68 @@
   .goals-edit-form {
     padding: 20px;
   }
+}
+
+/* Student profile theme overrides */
+.student-sub-page.student-theme-dark .profile-header {
+  background: linear-gradient(130deg, #0a1d4f 0%, #13377e 62%, #2062ff 100%);
+  color: #ffffff;
+}
+
+.student-sub-page.student-theme-dark .edit-profile-btn,
+.student-sub-page.student-theme-dark .theme-toggle-btn {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.student-sub-page.student-theme-dark .goals-section h2,
+.student-sub-page.student-theme-dark .stats-section h2,
+.student-sub-page.student-theme-dark .recent-sessions h2,
+.student-sub-page.student-theme-dark .session-info h4,
+.student-sub-page.student-theme-dark .stat-content h3,
+.student-sub-page.student-theme-dark .goal-input-group label {
+  color: #e2e8f0;
+}
+
+.student-sub-page.student-theme-dark .goal-card,
+.student-sub-page.student-theme-dark .goals-edit-form,
+.student-sub-page.student-theme-dark .stat-card,
+.student-sub-page.student-theme-dark .session-item {
+  background: rgba(15, 23, 42, 0.72);
+  border-color: rgba(148, 163, 184, 0.24);
+  box-shadow: 0 14px 30px rgba(2, 6, 23, 0.35);
+}
+
+.student-sub-page.student-theme-dark .goal-text,
+.student-sub-page.student-theme-dark .stat-content p,
+.student-sub-page.student-theme-dark .session-info p,
+.student-sub-page.student-theme-dark .session-date,
+.student-sub-page.student-theme-dark .goal-header,
+.student-sub-page.student-theme-dark .loading-spinner {
+  color: #cbd5e1;
+}
+
+.student-sub-page.student-theme-dark .goal-input-group input {
+  background: rgba(2, 6, 23, 0.75);
+  border-color: rgba(148, 163, 184, 0.3);
+  color: #f8fafc;
+}
+
+.student-sub-page.student-theme-light .profile-header {
+  background: linear-gradient(130deg, #e8f1ff 0%, #cfe2ff 62%, #b7d4ff 100%);
+  color: #0f172a;
+  border-color: rgba(32, 98, 255, 0.2);
+}
+
+.student-sub-page.student-theme-light .profile-avatar {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(32, 98, 255, 0.25);
+}
+
+.student-sub-page.student-theme-light .edit-profile-btn,
+.student-sub-page.student-theme-light .theme-toggle-btn {
+  color: #1449c8;
+  border-color: rgba(32, 98, 255, 0.35);
+  background: rgba(255, 255, 255, 0.72);
 }

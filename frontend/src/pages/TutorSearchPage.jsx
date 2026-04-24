@@ -32,8 +32,6 @@ import InfoSection from "../components/InfoSection";
 import Footer from "../components/Footer";
 
 // Page-specific CSS
-
-import "./Home.css";
 import "./TutorSearchPage.css";
 
 const API = "http://localhost:5000";
@@ -295,21 +293,16 @@ const TutorSearchPage = () => {
 
   if (loading) {
     return (
-      <div className="tutor-search-page">
-        <div className="loading-spinner">Loading tutors...</div>
+      <div className="tutor-search-page min-h-screen bg-slate-950 text-slate-100">
+        <div className="loading-spinner flex min-h-screen items-center justify-center text-xl font-semibold text-sky-200">Loading tutors...</div>
       </div>
     );
   }
 
   return (
-    <div className="tutor-search-page">
+    <div className="tutor-search-page min-h-screen bg-slate-950 text-slate-100">
       {/* Hero Section */}
-      <section
-        className="tutor-hero-section"
-        style={{
-          background: "linear-gradient(135deg, #0b1f4d 0%, #0f2f6b 100%)",
-        }}
-      >
+      <section className="tutor-hero-section border-b border-white/10">
         <div className="container">
           <div className="tutor-hero-content">
             <div className="tutor-welcome">
@@ -373,7 +366,7 @@ const TutorSearchPage = () => {
       {/* Advanced Search Section */}
       <section
         className="info-section"
-        style={{ backgroundColor: "var(--white)", padding: "60px 0" }}
+        style={{ backgroundColor: "transparent", padding: "60px 0" }}
       >
         <div className="container">
           <div className="info-header text-center">
@@ -401,7 +394,7 @@ const TutorSearchPage = () => {
       {/* Role-specific Tools */}
       <section
         className="info-section"
-        style={{ backgroundColor: "#f8fafc", padding: "80px 0" }}
+        style={{ backgroundColor: "transparent", padding: "80px 0" }}
       >
         <div className="container">
           <div className="info-header text-center">

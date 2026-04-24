@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import API from "../services/api";
+import AppHeader from "../components/AppHeader";
+import AppFooter from "../components/AppFooter";
 import "./AdminDashboard.css";
 
 export default function AdminDashboard() {
@@ -312,29 +314,30 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div className="admin-dashboard-container">
-      <main className="admin-scroll">
+    <div className="admin-dashboard-container min-h-screen bg-slate-950 text-slate-100">
+      <AppHeader />
+      <main className="admin-scroll mx-auto w-full max-w-7xl px-6 py-10">
         <section className="admin-overview">
-          <div className="admin-card summary-card">
+          <div className="admin-card summary-card rounded-3xl border border-sky-400/15 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-6 shadow-[0_30px_80px_-35px_rgba(8,15,31,0.85)]">
             <div className="summary-top-row">
               <div>
-                <span className="admin-badge">Admin Control Center</span>
-                <h2>Welcome back, {me?.name || "Admin"}</h2>
-                <p className="admin-intro">
+                <span className="admin-badge rounded-full border border-sky-300/30 bg-sky-300/10 px-3 py-1 text-xs uppercase tracking-widest text-sky-100">Admin Control Center</span>
+                <h2 className="mt-3 text-3xl font-black text-white">Welcome back, {me?.name || "Admin"}</h2>
+                <p className="admin-intro mt-2 text-slate-300">
                   Track platform health, manage users, and export reports from one place.
                 </p>
               </div>
-              <div className="summary-actions">
+              <div className="summary-actions flex gap-2">
                 <button
                   type="button"
-                  className="row-btn quiz-btn"
+                  className="row-btn quiz-btn rounded-xl bg-sky-400 px-5 py-2 text-sm font-bold text-slate-950 transition hover:bg-sky-300"
                   onClick={() => navigate('/admin/quiz/create')}
                 >
                   Create Quiz
                 </button>
                 <button
                   type="button"
-                  className="row-btn logout-btn"
+                  className="row-btn logout-btn rounded-xl bg-rose-300 px-5 py-2 text-sm font-bold text-slate-950 transition hover:bg-rose-200"
                   onClick={handleLogout}
                 >
                   Logout
@@ -343,27 +346,27 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="admin-stats-grid">
-            <div className="admin-card stat-card">
-              <span className="stat-label">Total users</span>
-              <strong>{counts.totalUsers}</strong>
+          <div className="admin-stats-grid mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="admin-card stat-card rounded-2xl border border-sky-400/10 bg-slate-900/90 p-4">
+              <span className="stat-label text-xs uppercase tracking-wider text-slate-300">Total users</span>
+              <strong className="mt-1 block text-2xl font-black text-sky-200">{counts.totalUsers}</strong>
             </div>
-            <div className="admin-card stat-card">
-              <span className="stat-label">Students</span>
-              <strong>{counts.students}</strong>
+            <div className="admin-card stat-card rounded-2xl border border-sky-400/10 bg-slate-900/90 p-4">
+              <span className="stat-label text-xs uppercase tracking-wider text-slate-300">Students</span>
+              <strong className="mt-1 block text-2xl font-black text-sky-200">{counts.students}</strong>
             </div>
-            <div className="admin-card stat-card">
-              <span className="stat-label">Tutors</span>
-              <strong>{counts.tutors}</strong>
+            <div className="admin-card stat-card rounded-2xl border border-sky-400/10 bg-slate-900/90 p-4">
+              <span className="stat-label text-xs uppercase tracking-wider text-slate-300">Tutors</span>
+              <strong className="mt-1 block text-2xl font-black text-sky-200">{counts.tutors}</strong>
             </div>
-            <div className="admin-card stat-card">
-              <span className="stat-label">Sessions</span>
-              <strong>{counts.sessions}</strong>
+            <div className="admin-card stat-card rounded-2xl border border-sky-400/10 bg-slate-900/90 p-4">
+              <span className="stat-label text-xs uppercase tracking-wider text-slate-300">Sessions</span>
+              <strong className="mt-1 block text-2xl font-black text-sky-200">{counts.sessions}</strong>
             </div>
           </div>
 
-          <div className="admin-visuals-grid">
-            <div className="admin-card chart-card">
+          <div className="admin-visuals-grid mt-4 grid gap-4 lg:grid-cols-2">
+            <div className="admin-card chart-card rounded-2xl border border-sky-400/10 bg-slate-900/90 p-5">
               <div className="list-header chart-head">
                 <div>
                   <h3>User Distribution</h3>
@@ -393,7 +396,7 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <div className="admin-card chart-card">
+            <div className="admin-card chart-card rounded-2xl border border-sky-400/10 bg-slate-900/90 p-5">
               <div className="list-header chart-head">
                 <div>
                   <h3>Session Status Overview</h3>
@@ -444,12 +447,12 @@ export default function AdminDashboard() {
           </div>
         </section>
 
-        <section className="admin-tab-panel">
-          <div className="admin-tab-list">
+        <section className="admin-tab-panel mt-6">
+          <div className="admin-tab-list flex flex-wrap gap-2">
             <button
               type="button"
               className={
-                activeTab === "users" ? "admin-tab active" : "admin-tab"
+                activeTab === "users" ? "admin-tab active rounded-xl border border-sky-300 bg-sky-300/20 px-4 py-2 text-sm font-semibold text-sky-100" : "admin-tab rounded-xl border border-sky-400/15 bg-slate-900/80 px-4 py-2 text-sm font-semibold text-slate-200"
               }
               onClick={() => setActiveTab("users")}
             >
@@ -458,7 +461,7 @@ export default function AdminDashboard() {
             <button
               type="button"
               className={
-                activeTab === "ratings" ? "admin-tab active" : "admin-tab"
+                activeTab === "ratings" ? "admin-tab active rounded-xl border border-sky-300 bg-sky-300/20 px-4 py-2 text-sm font-semibold text-sky-100" : "admin-tab rounded-xl border border-sky-400/15 bg-slate-900/80 px-4 py-2 text-sm font-semibold text-slate-200"
               }
               onClick={() => setActiveTab("ratings")}
             >
@@ -467,7 +470,7 @@ export default function AdminDashboard() {
             <button
               type="button"
               className={
-                activeTab === "sessions" ? "admin-tab active" : "admin-tab"
+                activeTab === "sessions" ? "admin-tab active rounded-xl border border-sky-300 bg-sky-300/20 px-4 py-2 text-sm font-semibold text-sky-100" : "admin-tab rounded-xl border border-sky-400/15 bg-slate-900/80 px-4 py-2 text-sm font-semibold text-slate-200"
               }
               onClick={() => setActiveTab("sessions")}
             >
@@ -476,7 +479,7 @@ export default function AdminDashboard() {
             <button
               type="button"
               className={
-                activeTab === "quizzes" ? "admin-tab active" : "admin-tab"
+                activeTab === "quizzes" ? "admin-tab active rounded-xl border border-sky-300 bg-sky-300/20 px-4 py-2 text-sm font-semibold text-sky-100" : "admin-tab rounded-xl border border-sky-400/15 bg-slate-900/80 px-4 py-2 text-sm font-semibold text-slate-200"
               }
               onClick={() => setActiveTab("quizzes")}
             >
@@ -484,7 +487,7 @@ export default function AdminDashboard() {
             </button>
             <button
               type="button"
-              className="admin-tab pdf-generate-btn"
+              className="admin-tab pdf-generate-btn ml-auto rounded-xl bg-sky-400 px-4 py-2 text-sm font-bold text-slate-950 transition hover:bg-sky-300"
               onClick={exportReportPdf}
               disabled={pdfLoading}
             >
@@ -498,7 +501,7 @@ export default function AdminDashboard() {
           ) : (
             <div className="admin-tab-content">
               {activeTab === "users" && (
-                <div className="admin-card list-card">
+                <div className="admin-card list-card rounded-2xl border border-sky-400/10 bg-slate-900/90 p-5">
                   <div className="list-header">
                     <div>
                       <h3>Users</h3>
@@ -610,7 +613,7 @@ export default function AdminDashboard() {
               )}
 
               {activeTab === "ratings" && (
-                <div className="admin-card list-card wide-card">
+                <div className="admin-card list-card wide-card rounded-2xl border border-sky-400/10 bg-slate-900/90 p-5">
                   <div className="list-header">
                     <div>
                       <h3>Tutor Ratings</h3>
@@ -644,7 +647,7 @@ export default function AdminDashboard() {
               )}
 
               {activeTab === "sessions" && (
-                <div className="admin-card list-card wide-card">
+                <div className="admin-card list-card wide-card rounded-2xl border border-sky-400/10 bg-slate-900/90 p-5">
                   <div className="list-header">
                     <div>
                       <h3>Sessions</h3>
@@ -687,7 +690,7 @@ export default function AdminDashboard() {
               )}
 
               {activeTab === "quizzes" && (
-                <div className="admin-card list-card wide-card">
+                <div className="admin-card list-card wide-card rounded-2xl border border-sky-400/10 bg-slate-900/90 p-5">
                   <div className="list-header">
                     <div>
                       <h3>Manage Quizzes</h3>
@@ -835,6 +838,7 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+      <AppFooter />
     </div>
   );
 }

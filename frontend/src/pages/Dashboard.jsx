@@ -1,10 +1,13 @@
 import { useState, useEffect, useMemo, useReducer } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { format, addMonths, subMonths } from "date-fns";
+import { Moon, Sun } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import API from "../services/api";
 import { sameLocalCalendarDay } from "../utils/sessionUtils";
+import AppFooter from "../components/AppFooter";
+import AppHeader from "../components/AppHeader";
 import "./Dashboard.css";
 
 export default function TutorDashboard() {
@@ -12,6 +15,13 @@ export default function TutorDashboard() {
   const [me, setMe] = useState(null);
   const [subjectMap, setSubjectMap] = useState({});
   const [activeTab, setActiveTab] = useState("profile");
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem("tutorProfileTheme") || "dark",
+  );
+
+  useEffect(() => {
+    localStorage.setItem("tutorProfileTheme", theme);
+  }, [theme]);
 
   useEffect(() => {
     const raw = localStorage.getItem("user");
@@ -347,14 +357,15 @@ export default function TutorDashboard() {
 
   if (!me) {
     return (
-      <div className="dashboard-container">
+      <div className={`dashboard-container profile-theme-${theme}`}>
         <p className="dashboard-loading">Loading…</p>
       </div>
     );
   }
 
   return (
-    <div className="dashboard-container">
+    <div className={`dashboard-container profile-theme-${theme}`}>
+      <AppHeader />
       <main className="dashboard-scroll">
         <section className="dashboard-hero">
           <div className="dashboard-hero-content">
@@ -415,6 +426,13 @@ export default function TutorDashboard() {
             📊 Generate Report
           </button>
           <button
+            type="button"
+            className="dashboard-tab dashboard-theme-toggle"
+            onClick={() => setTheme((prev) => (prev === "dark" ? "light" : "dark"))}
+          >
+            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />} {theme === "dark" ? "Light" : "Dark"} mode
+          </button>
+          <button
             className="dashboard-tab"
             onClick={() => navigate("/tutor/certification")}
           >
@@ -464,7 +482,7 @@ export default function TutorDashboard() {
                       </p>
                       <span>{subjectLabel(r.subject)}</span>
                     </div>
-                    <div className="actions">
+                    <div className="actions flex gap-2">
                       <button
                         className="accept-btn"
                         onClick={() => handleAccept(r._id)}

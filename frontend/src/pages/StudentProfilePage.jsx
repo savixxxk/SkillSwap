@@ -10,8 +10,11 @@ import {
   BookOpen,
   Star,
   Settings,
+  Sun,
+  Moon,
 } from "lucide-react";
 import StudentAppHeader from "../components/StudentAppHeader";
+import AppFooter from "../components/AppFooter";
 import "./StudentSubPage.css";
 import "./StudentProfilePage.css";
 
@@ -28,6 +31,13 @@ export default function StudentProfilePage() {
   const [sessions, setSessions] = useState([]);
   const [editMode, setEditMode] = useState(false);
   const [tempGoals, setTempGoals] = useState({ ...goals });
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem("studentProfileTheme") || "dark",
+  );
+
+  useEffect(() => {
+    localStorage.setItem("studentProfileTheme", theme);
+  }, [theme]);
 
   useEffect(() => {
     const raw = localStorage.getItem("user");
@@ -97,7 +107,7 @@ export default function StudentProfilePage() {
 
   if (loading) {
     return (
-      <div className="student-sub-page">
+      <div className={`student-sub-page student-theme-${theme}`}>
         <StudentAppHeader />
         <main className="student-sub-main">
           <div className="loading-spinner">Loading profile...</div>
@@ -107,7 +117,7 @@ export default function StudentProfilePage() {
   }
 
   return (
-    <div className="student-sub-page">
+    <div className={`student-sub-page student-theme-${theme}`}>
       <StudentAppHeader />
       <main className="student-sub-main">
         <div className="profile-header">
@@ -127,6 +137,14 @@ export default function StudentProfilePage() {
           >
             <Settings size={20} />
             {editMode ? "Cancel" : "Edit Goals"}
+          </button>
+          <button
+            type="button"
+            className="theme-toggle-btn"
+            onClick={() => setTheme((prev) => (prev === "dark" ? "light" : "dark"))}
+          >
+            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+            {theme === "dark" ? "Light" : "Dark"} mode
           </button>
         </div>
 
@@ -313,6 +331,7 @@ export default function StudentProfilePage() {
           </div>
         </section>
       </main>
+      <AppFooter />
     </div>
   );
 }

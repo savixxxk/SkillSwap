@@ -11,6 +11,7 @@ import QuizPage from "./pages/QuizPage";
 import TutorSearchPage from "./pages/TutorSearchPage";
 import StudentProfilePage from "./pages/StudentProfilePage";
 import StudentSearch from "./pages/StudentSearch";
+import SessionBookingPage from "./pages/SessionBookingPage";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="/tutor/certification" element={<TutorCertification />} />
         <Route path="/quiz/:subject" element={<QuizPage />} />
         <Route path="/tutor-search" element={<TutorSearchPage />} />
+        <Route path="/booking" element={<SessionBookingPage />} />
         <Route path="/student-search" element={<StudentSearch />} />
         <Route path="/student-profile" element={<StudentProfilePage />} />
       </Routes>

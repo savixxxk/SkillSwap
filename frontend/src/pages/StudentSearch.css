@@ -1,7 +1,7 @@
 .student-search-page .student-search-main {
-  max-width: 1100px;
+  max-width: 980px;
   margin: 0 auto;
-  padding: 0 0.5rem 2.5rem;
+  padding: 0.6rem 0.5rem 2.5rem;
 }
 
 .student-search-hero {
@@ -12,8 +12,8 @@
 
 .student-search-hero h1 {
   margin: 0 0 0.5rem;
-  font-size: 2rem;
-  color: #1e3a5f;
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  color: var(--text);
   font-weight: 700;
   letter-spacing: -0.02em;
 }
@@ -21,9 +21,49 @@
 .student-search-hero p {
   margin: 0 auto;
   max-width: 520px;
-  color: #64748b;
+  color: var(--muted);
   line-height: 1.55;
   font-size: 1.02rem;
+}
+
+.student-search-panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.student-search-panel {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(32, 98, 255, 0.14);
+  border-radius: 18px;
+  padding: 1.15rem;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+}
+
+.student-search-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.7rem;
+  color: #ffffff;
+  background: linear-gradient(130deg, #2062ff, #0ea5e9);
+}
+
+.student-search-icon-wrap.alt {
+  background: linear-gradient(130deg, #0ea5e9, #14b8a6);
+}
+
+.student-search-panel h3 {
+  margin: 0 0 0.45rem;
+  color: var(--text);
+}
+
+.student-search-panel p {
+  margin: 0 0 1rem;
+  color: var(--muted);
 }
 
 .student-search-status,
@@ -403,6 +443,10 @@
 }
 
 @media (max-width: 600px) {
+  .student-search-panels {
+    grid-template-columns: 1fr;
+  }
+
   .student-search-hero h1 {
     font-size: 1.6rem;
   }

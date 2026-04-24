@@ -1,15 +1,31 @@
-﻿import { useNavigate, NavLink } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
 import { Eye, EyeOff, Users, Award, Shield } from "lucide-react";
 import api from "../services/api";
 import { getPostAuthPath } from "../utils/authRedirect";
 
+const roleImages = {
+  student: "/images/books.jpg",
+  tutor: "/images/knowledge.jpg",
+  admin: "/images/progress.jpg",
+};
+
 export default function Register() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [role, setRole] = useState("");
-  const [form, setForm] = useState({ name: "", email: "", password: "", adminCode: "" });
-  const [errors, setErrors] = useState({ name: "", email: "", password: "", adminCode: "" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    adminCode: "",
+  });
+  const [errors, setErrors] = useState({
+    name: "",
+    email: "",
+    password: "",
+    adminCode: "",
+  });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -17,7 +33,7 @@ export default function Register() {
   const roles = [
     { id: "student", label: "Student", icon: Users, desc: "Learn from tutors" },
     { id: "tutor", label: "Tutor", icon: Award, desc: "Share your knowledge" },
-    { id: "admin", label: "Admin", icon: Shield, desc: "Manage the platform" }
+    { id: "admin", label: "Admin", icon: Shield, desc: "Manage the platform" },
   ];
 
   const validateName = (name) => {
@@ -48,27 +64,30 @@ export default function Register() {
     return "";
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
 
-    // Real-time validation
-    let error = "";
+    let nextError = "";
     switch (name) {
       case "name":
-        error = validateName(value);
+        nextError = validateName(value);
         break;
       case "email":
-        error = validateEmail(value);
+        nextError = validateEmail(value);
         break;
       case "password":
-        error = validatePassword(value);
+        nextError = validatePassword(value);
         break;
       case "adminCode":
-        error = validateAdminCode(value);
+        nextError = validateAdminCode(value);
+        break;
+      default:
         break;
     }
-    setErrors(prev => ({ ...prev, [name]: error }));
+
+    setErrors((prev) => ({ ...prev, [name]: nextError }));
+    setError("");
   };
 
   const validateForm = () => {
@@ -81,22 +100,25 @@ export default function Register() {
       name: nameError,
       email: emailError,
       password: passwordError,
-      adminCode: adminCodeError
+      adminCode: adminCodeError,
     });
 
     if (nameError || emailError || passwordError || adminCodeError) {
       return "Please fix the errors above";
     }
+
     return null;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
       return;
     }
+
     setLoading(true);
     try {
       const response = await api.post("/auth/register", {
@@ -104,8 +126,9 @@ export default function Register() {
         email: form.email,
         password: form.password,
         role,
-        ...(role === "admin" && { adminCode: form.adminCode })
+        ...(role === "admin" && { adminCode: form.adminCode }),
       });
+
       localStorage.removeItem("authToken");
       localStorage.removeItem("jwtToken");
       localStorage.setItem("user", JSON.stringify(response.data.user));
@@ -119,102 +142,200 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-[#081121] flex items-center justify-center px-4 py-12 relative overflow-hidden">
-      <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden">
-        <div className="absolute -top-24 -left-24 w-[28rem] h-[28rem] bg-blue-500/25 rounded-full blur-3xl animate-pulse" />
-        <div
-          className="absolute -bottom-24 -right-24 w-[28rem] h-[28rem] bg-cyan-500/10 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s" }}
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_55%)]" />
-      </div>
-      <div className="w-full max-w-md z-10">
-        <div className="text-center mb-10 relative">
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3 relative z-10 tracking-tight">Join SkillSwap</h1>
-          <p className="text-blue-100/90 text-base sm:text-lg relative z-10">
-            {step === 1 ? "Choose your role" : `Complete your ${role} profile`}
-          </p>
-        </div>
-        {step === 1 ? (
-          <div className="space-y-4">
-            {roles.map((r) => {
-              const Icon = r.icon;
-              const roleImages = {student: "books.jpg", tutor: "knowledge.jpg", admin: "progress.jpg"};
-              return (
-                <button key={r.id} onClick={() => { setRole(r.id); setStep(2); setError(""); }} className="w-full relative border border-white/15 hover:border-white/25 bg-white/5 hover:bg-white/10 rounded-xl transition-all transform hover:scale-[1.02] group shadow-lg overflow-hidden h-32">
-                  <img src={`/images/${roleImages[r.id]}`} alt={r.label} className="absolute inset-0 w-full h-full object-cover opacity-25 group-hover:opacity-40 transition-opacity" />
-                  <div className="relative z-10 flex items-center gap-4 h-full p-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-lg flex items-center justify-center text-white group-hover:scale-110 transition-transform shadow-md flex-shrink-0">
-                      <Icon size={24} />
-                    </div>
-                    <div className="text-left">
-                      <div className="text-white font-semibold">{r.label}</div>
-                      <div className="text-blue-300 text-sm font-medium">{r.desc}</div>
-                    </div>
+    <main className="relative min-h-screen overflow-hidden bg-slate-950 px-6 py-12 text-slate-100">
+      <div className="pointer-events-none absolute -left-24 top-16 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl floating-blob" />
+      <div className="pointer-events-none absolute -right-16 bottom-8 h-72 w-72 rounded-full bg-blue-400/20 blur-3xl floating-blob floating-blob-delay" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(14,165,233,0.14),transparent_55%)]" />
+
+      <section className="relative mx-auto w-full max-w-6xl overflow-hidden rounded-3xl border border-white/15 bg-slate-900/60 shadow-[0_30px_80px_-30px_rgba(30,64,175,0.5)] backdrop-blur">
+        <div className="grid md:grid-cols-2">
+          <div className="relative hidden min-h-[680px] md:block">
+            <img
+              src="/images/reg.jpg"
+              alt="Students collaborating"
+              className="h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-950/50 via-slate-950/30 to-cyan-950/50" />
+            <div className="absolute inset-0 flex flex-col justify-end p-10">
+              <p className="inline-flex w-fit rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-slate-100">
+                Join the network
+              </p>
+              <h1 className="mt-4 max-w-sm text-4xl font-extrabold text-white">
+                Create your SkillSwap account
+              </h1>
+              <p className="mt-3 max-w-md text-sm text-slate-200/90">
+                Choose your role, set your profile, and start using the platform with a navy-blue interface that stays readable.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-center px-6 py-10 md:px-10 md:py-14">
+            <div className="fade-up w-full max-w-md">
+              <p className="inline-flex rounded-full border border-cyan-300/40 bg-cyan-300/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-cyan-100">
+                Secure Registration
+              </p>
+              <h1 className="mt-4 text-3xl font-extrabold text-white">Register</h1>
+              <p className="mt-2 text-sm text-slate-300">
+                {step === 1 ? "Choose your role" : `Complete your ${role} profile`}
+              </p>
+
+              {step === 1 ? (
+                <div className="mt-6 space-y-4">
+                  {roles.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          setRole(item.id);
+                          setStep(2);
+                          setError("");
+                        }}
+                        className="group relative h-32 w-full overflow-hidden rounded-2xl border border-white/15 bg-slate-900/70 text-left transition hover:border-cyan-300/60 hover:bg-slate-900 hover:scale-[1.01]"
+                      >
+                        <img
+                          src={roleImages[item.id]}
+                          alt={item.label}
+                          className="absolute inset-0 h-full w-full object-cover opacity-25 transition-opacity group-hover:opacity-40"
+                        />
+                        <div className="relative z-10 flex h-full items-center gap-4 p-4">
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-cyan-400 text-slate-950 shadow-md transition-transform group-hover:scale-110">
+                            <Icon size={24} />
+                          </div>
+                          <div>
+                            <div className="font-semibold text-white">{item.label}</div>
+                            <div className="text-sm font-medium text-slate-300">{item.desc}</div>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+
+                  <div className="pt-2 text-center text-sm text-slate-300">
+                    Already have an account?{" "}
+                    <Link to="/login" className="font-semibold text-cyan-200 underline">
+                      Sign in
+                    </Link>
                   </div>
-                </button>
-              );
-            })}
+                  <div className="text-center text-sm text-slate-400">
+                    <Link to="/" className="transition-colors hover:text-slate-200">
+                      ← Back to home
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-2xl border border-white/10 bg-slate-950/55 p-6 shadow-2xl shadow-cyan-900/20">
+                  {error ? (
+                    <div className="rounded-lg border border-red-400/40 bg-red-500/15 p-4 text-sm font-medium text-red-200">
+                      {error}
+                    </div>
+                  ) : null}
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-200">Full Name</label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={form.name}
+                      onChange={handleInputChange}
+                      placeholder="John Doe"
+                      className={`w-full rounded-xl border bg-slate-950/80 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:ring-2 focus:ring-cyan-300/40 ${
+                        errors.name ? "border-red-400/80" : "border-slate-600"
+                      }`}
+                    />
+                    {errors.name ? <p className="mt-2 text-sm text-red-300">{errors.name}</p> : null}
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-200">Email Address</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={form.email}
+                      onChange={handleInputChange}
+                      placeholder="your@email.com"
+                      className={`w-full rounded-xl border bg-slate-950/80 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:ring-2 focus:ring-cyan-300/40 ${
+                        errors.email ? "border-red-400/80" : "border-slate-600"
+                      }`}
+                    />
+                    {errors.email ? <p className="mt-2 text-sm text-red-300">{errors.email}</p> : null}
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-200">Password</label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        name="password"
+                        value={form.password}
+                        onChange={handleInputChange}
+                        placeholder="At least 6 characters"
+                        className={`w-full rounded-xl border bg-slate-950/80 px-4 py-3 pr-12 text-slate-100 outline-none transition placeholder:text-slate-500 focus:ring-2 focus:ring-cyan-300/40 ${
+                          errors.password ? "border-red-400/80" : "border-slate-600"
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute right-3 top-3.5 text-slate-400 transition-colors hover:text-slate-200"
+                      >
+                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </button>
+                    </div>
+                    {errors.password ? <p className="mt-2 text-sm text-red-300">{errors.password}</p> : null}
+                  </div>
+
+                  {role === "admin" ? (
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-200">Admin Code</label>
+                      <input
+                        type="password"
+                        name="adminCode"
+                        value={form.adminCode}
+                        onChange={handleInputChange}
+                        placeholder="Enter admin code"
+                        className={`w-full rounded-xl border bg-slate-950/80 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:ring-2 focus:ring-cyan-300/40 ${
+                          errors.adminCode ? "border-red-400/80" : "border-slate-600"
+                        }`}
+                      />
+                      {errors.adminCode ? <p className="mt-2 text-sm text-red-300">{errors.adminCode}</p> : null}
+                      <p className="mt-2 text-xs font-medium text-slate-400">Required for admin registration</p>
+                    </div>
+                  ) : null}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full rounded-lg bg-cyan-400 px-4 py-2 font-bold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {loading ? "Creating account..." : "Create Account"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep(1);
+                      setRole("");
+                      setError("");
+                    }}
+                    className="w-full rounded-lg border border-slate-600 bg-slate-950/60 px-4 py-2 font-medium text-slate-100 transition hover:border-cyan-300 hover:bg-slate-900"
+                  >
+                    ← Back to Role Selection
+                  </button>
+
+                  <p className="text-center text-sm text-slate-300">
+                    Already have an account?{" "}
+                    <Link to="/login" className="font-semibold text-cyan-200 underline">
+                      Sign in
+                    </Link>
+                  </p>
+                </form>
+              )}
+            </div>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 sm:p-10 space-y-6 shadow-2xl shadow-black/30">
-            {error && <div className="p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm font-medium">{error}</div>}
-            <div>
-              <label className="block text-sm font-medium text-blue-100 mb-2">Full Name</label>
-              <input type="text" name="name" value={form.name} onChange={handleInputChange} placeholder="John Doe" style={{ color: "#000000", caretColor: "#000000" }} className={`w-full px-4 py-3 bg-white border rounded-xl text-black placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition-all ${
-                errors.name ? "border-red-400" : "border-white/15"
-              }`} />
-              {errors.name && <p className="mt-2 text-red-300 text-sm">{errors.name}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-blue-100 mb-2">Email Address</label>
-              <input type="email" name="email" value={form.email} onChange={handleInputChange} placeholder="your@email.com" style={{ color: "#000000", caretColor: "#000000" }} className={`w-full px-4 py-3 bg-white border rounded-xl text-black placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition-all ${
-                errors.email ? "border-red-400" : "border-white/15"
-              }`} />
-              {errors.email && <p className="mt-2 text-red-300 text-sm">{errors.email}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-blue-100 mb-2">Password</label>
-              <div className="relative">
-                <input type={showPassword ? "text" : "password"} name="password" value={form.password} onChange={handleInputChange} placeholder="At least 6 characters" style={{ color: "#000000", caretColor: "#000000" }} className={`w-full px-4 py-3 bg-white border rounded-xl text-black placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition-all pr-12 ${
-                  errors.password ? "border-red-400" : "border-white/15"
-                }`} />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3.5 text-blue-300 hover:text-white transition-colors p-1">{showPassword ? <EyeOff size={20} /> : <Eye size={20} />}</button>
-              </div>
-              {errors.password && <p className="mt-2 text-red-300 text-sm">{errors.password}</p>}
-            </div>
-            {role === "admin" && <div>
-              <label className="block text-sm font-medium text-blue-100 mb-2">Admin Code</label>
-              <input type="password" name="adminCode" value={form.adminCode} onChange={handleInputChange} placeholder="Enter admin code" style={{ color: "#000000", caretColor: "#000000" }} className={`w-full px-4 py-3 bg-white border rounded-xl text-black placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition-all ${
-                errors.adminCode ? "border-red-400" : "border-white/15"
-              }`} />
-              {errors.adminCode && <p className="mt-2 text-red-300 text-sm">{errors.adminCode}</p>}
-              <p className="mt-2 text-xs text-blue-300 font-medium">Required for admin registration</p>
-            </div>}
-            <button type="submit" disabled={loading} className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-slate-500 disabled:to-slate-600 text-white font-semibold rounded-lg transition-all transform hover:scale-105 hover:shadow-lg shadow-md">{loading ? "Creating account..." : "Create Account"}</button>
-            <button type="button" onClick={() => {setStep(1); setRole(""); setError("");}} className="w-full py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-lg transition-colors">← Back to Role Selection</button>
-            <p className="text-center text-blue-100/80 text-sm">
-              Already have an account?{" "}
-              <NavLink to="/login" className="text-cyan-300 font-semibold underline underline-offset-2">
-                Sign in
-              </NavLink>
-            </p>
-          </form>
-        )}
-        {step === 1 && (
-          <div className="mt-8 text-center space-y-3">
-            <p className="text-blue-100/85 text-sm sm:text-base">
-              Already have an account?{" "}
-              <NavLink to="/login" className="text-cyan-300 hover:text-cyan-200 font-semibold underline underline-offset-2">
-                Sign in
-              </NavLink>
-            </p>
-            <NavLink to="/" className="text-blue-200/80 hover:text-white text-sm transition-colors block">
-              ← Back to home
-            </NavLink>
-          </div>
-        )}
-      </div>
-    </div>
+        </div>
+      </section>
+    </main>
   );
 }
