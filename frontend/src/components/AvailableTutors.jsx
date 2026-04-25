@@ -1,8 +1,14 @@
 import React from 'react';
 import { ArrowRight, Star, BadgeCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import './AvailableTutors.css';
 
 const TutorCard = ({ data }) => {
+  const navigate = useNavigate();
+  
+  const handleBookSession = () => {
+    navigate('/booking', { state: { tutor: data } });
+  };
   return (
     <div className="tutor-card">
       <div className="tutor-card-top" style={{ background: data.gradient }}>
@@ -28,14 +34,14 @@ const TutorCard = ({ data }) => {
              <span className="rating-score">{data.rating.toFixed(1)}</span>
              <span className="rating-reviews">({data.reviewsCount})</span>
           </div>
-          <button className="btn-primary tutor-book-btn">Book Session</button>
+          <button className="btn-primary tutor-book-btn" onClick={handleBookSession}>Book Session</button>
         </div>
       </div>
     </div>
   );
 }
 
-const AvailableTutors = ({ tutors = [] }) => {
+const AvailableTutors = ({ tutors = [], isLoading = false }) => {
   return (
     <section className="available-tutors-section">
       <div className="container">
@@ -50,10 +56,14 @@ const AvailableTutors = ({ tutors = [] }) => {
           </button>
         </div>
         
-        {tutors.length > 0 ? (
+        {isLoading ? (
+          <div className="loading-state" style={{ textAlign: 'center', padding: '40px', color: '#3B82F6', fontWeight: 500 }}>
+            <span className="spinner"></span> Loading top tutors...
+          </div>
+        ) : tutors.length > 0 ? (
           <div className="tutors-grid">
              {tutors.map((tutor, idx) => (
-               <TutorCard key={idx} data={tutor} />
+               <TutorCard key={tutor._id || idx} data={tutor} />
              ))}
           </div>
         ) : (

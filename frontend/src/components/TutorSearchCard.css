@@ -7,18 +7,18 @@
 }
 
 .modern-tutor-search {
-  background: var(--theme-white);
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 8px 30px rgba(74, 144, 226, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(245, 250, 255, 0.98) 100%);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 18px 45px rgba(37, 99, 235, 0.14);
   display: flex;
   flex-direction: column;
   gap: 16px;
   width: 100%;
-  max-width: 900px;
+  max-width: none;
   margin: 0 auto;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  border: 1px solid var(--theme-border-blue);
+  border: 1px solid rgba(74, 144, 226, 0.22);
 }
 
 .mts-row {
@@ -34,7 +34,7 @@
   align-items: center;
   gap: 8px;
   flex: 1;
-  border: 1.5px solid var(--theme-border-blue);
+  border: 1.5px solid rgba(74, 144, 226, 0.22);
   border-radius: 8px;
   padding: 0 16px;
   background: var(--theme-white);
@@ -137,7 +137,7 @@
   align-items: center;
   gap: 8px;
   background: var(--theme-white);
-  border: 1.5px solid var(--theme-border-blue);
+  border: 1.5px solid rgba(74, 144, 226, 0.22);
   padding: 0 16px;
   height: 40px;
   border-radius: 8px;
@@ -149,6 +149,7 @@
 }
 .mts-select-btn span {
   color: var(--theme-dark-blue);
+  font-weight: 600;
 }
 .mts-select-btn:hover {
   border-color: var(--theme-blue);
@@ -207,76 +208,12 @@
   background: var(--theme-light-blue);
 }
 
-/* Custom Calendar */
-.mts-calendar-dropdown {
-  padding: 12px;
-  min-width: 260px;
-}
-.mts-cal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  font-weight: 600;
-  color: var(--theme-dark-blue);
-  font-size: 14px;
-}
-.mts-cal-header button {
-  background: var(--theme-light-blue);
-  border: 1px solid var(--theme-border-blue);
-  color: var(--theme-blue);
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-}
-.mts-cal-header button:hover {
-  background: var(--theme-blue);
-  color: var(--theme-white);
-}
-.mts-cal-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-  text-align: center;
-}
-.mts-cal-day-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: #94a3b8;
-  padding-bottom: 4px;
-}
-.mts-cal-day {
-  font-size: 13px;
-  padding: 6px 0;
-  border-radius: 6px;
-  cursor: pointer;
-  color: var(--theme-dark-blue);
-}
-.mts-cal-day:hover:not(.mts-cal-disabled) {
-  background: var(--theme-light-blue);
-  color: var(--theme-blue);
-}
-.mts-cal-selected {
-  background: var(--theme-blue) !important;
-  color: var(--theme-white) !important;
-}
-.mts-cal-disabled {
-  color: #cbd5e1;
-  cursor: not-allowed;
-}
-
-
 /* Row 3 - Chips */
 .mts-chip {
   padding: 8px 18px;
   border-radius: 20px;
   background: var(--theme-white);
-  border: 1.5px solid var(--theme-border-blue);
+  border: 1.5px solid rgba(74, 144, 226, 0.22);
   color: var(--theme-blue);
   font-size: 14px;
   cursor: pointer;
