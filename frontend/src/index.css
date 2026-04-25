@@ -71,7 +71,6 @@ input,
 textarea,
 select {
   font: inherit;
-  color: var(--text);
 }
 
 .container {

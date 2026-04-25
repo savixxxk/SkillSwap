@@ -240,7 +240,7 @@ export default function Register() {
                       value={form.name}
                       onChange={handleInputChange}
                       placeholder="John Doe"
-                      className={`w-full rounded-xl border bg-slate-950/80 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:ring-2 focus:ring-cyan-300/40 ${
+                      className={`w-full rounded-xl border bg-slate-950/80 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:ring-2 focus:ring-cyan-300/40 ${
                         errors.name ? "border-red-400/80" : "border-slate-600"
                       }`}
                     />
@@ -255,7 +255,7 @@ export default function Register() {
                       value={form.email}
                       onChange={handleInputChange}
                       placeholder="your@email.com"
-                      className={`w-full rounded-xl border bg-slate-950/80 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:ring-2 focus:ring-cyan-300/40 ${
+                      className={`w-full rounded-xl border bg-slate-950/80 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:ring-2 focus:ring-cyan-300/40 ${
                         errors.email ? "border-red-400/80" : "border-slate-600"
                       }`}
                     />
@@ -271,7 +271,7 @@ export default function Register() {
                         value={form.password}
                         onChange={handleInputChange}
                         placeholder="At least 6 characters"
-                        className={`w-full rounded-xl border bg-slate-950/80 px-4 py-3 pr-12 text-slate-100 outline-none transition placeholder:text-slate-500 focus:ring-2 focus:ring-cyan-300/40 ${
+                        className={`w-full rounded-xl border bg-slate-950/80 px-4 py-3 pr-12 text-white outline-none transition placeholder:text-slate-500 focus:ring-2 focus:ring-cyan-300/40 ${
                           errors.password ? "border-red-400/80" : "border-slate-600"
                         }`}
                       />
@@ -295,7 +295,7 @@ export default function Register() {
                         value={form.adminCode}
                         onChange={handleInputChange}
                         placeholder="Enter admin code"
-                        className={`w-full rounded-xl border bg-slate-950/80 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-500 focus:ring-2 focus:ring-cyan-300/40 ${
+                        className={`w-full rounded-xl border bg-slate-950/80 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:ring-2 focus:ring-cyan-300/40 ${
                           errors.adminCode ? "border-red-400/80" : "border-slate-600"
                         }`}
                       />
