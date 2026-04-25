@@ -9,7 +9,7 @@ const examAttemptSchema = new mongoose.Schema(
   },
   { _id: false }
 );
-//tutor
+
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
