@@ -1,0 +1,85 @@
+:root {
+  --primary-blue: #4a90e2;
+  --dark-blue: #1b4167;
+}
+
+.top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 1rem 3rem;
+  margin: 1rem auto;
+  width: 100%;
+  max-width: 1390px;
+
+  background: linear-gradient(135deg, #fdfdfd, #a6c8dd);
+  border-radius: 10px;
+
+  box-shadow: 0 20px 20px rgba(0,0,0,0.08);
+}
+
+/* Logo */
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.logo-section:hover {
+  transform: scale(1.05);
+}
+.logo-section img {
+  width: 45px;
+}
+.logo-section h1 {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--primary-blue);
+}
+
+/* Quote */
+.header-quote {
+  flex: 1;
+  text-align: center;
+  font-family: 'Cursive', 'Brush Script MT', cursive;
+  font-size: 1.1rem;
+  color: #1b4167;
+  font-style: italic;
+  padding: 0 1rem;
+}
+
+/* Auth buttons */
+.auth-section {
+  display: flex;
+  gap: 1rem;
+}
+.auth-btn {
+  padding: 0.5rem 1.4rem;
+  border-radius: 25px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+.auth-btn.login {
+  border: 1px solid var(--primary-blue);
+  color: var(--primary-blue);
+}
+.auth-btn.login:hover {
+  background: var(--primary-blue);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(74,144,226,0.3);
+}
+.auth-btn.register {
+  background: linear-gradient(135deg, #4a90e2, #357ABD);
+  color: white;
+  border: none;
+  box-shadow: 0 6px 18px rgba(74,144,226,0.35);
+}
+.auth-btn.register:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 10px 25px rgba(74,144,226,0.45);
+}

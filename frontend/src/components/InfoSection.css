@@ -1,0 +1,25 @@
+.info-section {
+  padding: 80px 0;
+}
+
+.info-header {
+  max-width: 600px;
+  margin-bottom: 48px;
+}
+
+.info-title {
+  font-size: 40px;
+  color: var(--text-dark);
+  margin-bottom: 24px;
+  line-height: 1.25;
+}
+
+.info-description {
+  font-size: 16px;
+  color: var(--text-light);
+  line-height: 1.6;
+}
+
+.info-content-below {
+  width: 100%;
+}
