@@ -493,4 +493,3 @@ const TutorSearchPage = () => {
 };
 
 export default TutorSearchPage;
-//execute
