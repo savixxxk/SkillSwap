@@ -105,7 +105,7 @@ export default function Login() {
                   onChange={onChange}
                   required
                   placeholder="you@example.com"
-                  className="w-full rounded-lg border border-slate-600 bg-slate-950/80 px-3 py-2 text-white outline-none ring-cyan-300/60 transition placeholder:text-slate-500 focus:ring"
+                  className="auth-form-input w-full rounded-lg border border-slate-600 bg-slate-950/80 px-3 py-2 text-white caret-white outline-none ring-cyan-300/60 transition placeholder:text-slate-500 focus:ring"
                 />
               </div>
 
@@ -121,7 +121,7 @@ export default function Login() {
                     onChange={onChange}
                     required
                     placeholder="••••••••"
-                    className="w-full rounded-lg border border-slate-600 bg-slate-950/80 px-3 py-2 pr-12 text-white outline-none ring-cyan-300/60 transition placeholder:text-slate-500 focus:ring"
+                    className="auth-form-input w-full rounded-lg border border-slate-600 bg-slate-950/80 px-3 py-2 pr-12 text-white caret-white outline-none ring-cyan-300/60 transition placeholder:text-slate-500 focus:ring"
                   />
                   <button
                     type="button"

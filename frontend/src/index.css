@@ -182,3 +182,16 @@ select {
 .fade-up {
   animation: fadeUp 0.7s ease both;
 }
+
+.auth-form-input {
+  color: #ffffff;
+  caret-color: #ffffff;
+}
+
+.auth-form-input:-webkit-autofill,
+.auth-form-input:-webkit-autofill:hover,
+.auth-form-input:-webkit-autofill:focus,
+.auth-form-input:-webkit-autofill:active {
+  -webkit-text-fill-color: #ffffff;
+  transition: background-color 9999s ease-in-out 0s;
+}
