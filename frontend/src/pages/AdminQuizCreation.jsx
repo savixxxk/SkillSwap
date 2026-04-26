@@ -44,6 +44,22 @@ export default function AdminQuizCreation() {
   };
 
   const addQuestion = () => {
+    const lastQ = formData.questions[formData.questions.length - 1];
+    
+    if (!lastQ.questionText.trim()) {
+      setError(`Please fill the question text for Question ${formData.questions.length} before adding a new one.`);
+      return;
+    }
+    if (lastQ.options.some(opt => !opt.trim())) {
+      setError(`Please fill all options for Question ${formData.questions.length} before adding a new one.`);
+      return;
+    }
+    if (!lastQ.correctAnswer) {
+      setError(`Please select the correct answer for Question ${formData.questions.length} before adding a new one.`);
+      return;
+    }
+
+    setError('');
     setFormData({
       ...formData,
       questions: [...formData.questions, { questionText: '', options: ['', '', '', ''], correctAnswer: '' }]
