@@ -187,6 +187,7 @@ export default function AdminDashboard() {
         users: "SkillSwap Login Accounts Report",
         ratings: "SkillSwap Tutor Ratings Report",
         sessions: "SkillSwap Sessions Report",
+        quizzes: "Skill Swap — Quiz Report",
       };
       doc.setFontSize(18);
       doc.text(pdfTitleMap[activeTab] || "SkillSwap Admin Report", 40, 18);
@@ -262,6 +263,27 @@ export default function AdminDashboard() {
         });
       }
 
+      if (activeTab === "quizzes") {
+        autoTable(doc, {
+          startY: 35,
+          head: [["Metric", "Value"]],
+          body: [
+            ["Total quizzes", String(quizzes.length)],
+          ],
+        });
+
+        autoTable(doc, {
+          head: [["Title", "Subject", "Pass Mark", "Created By", "Created At"]],
+          body: quizzes.map((q) => [
+            q.title,
+            q.subject,
+            `${q.passMark}%`,
+            q.createdBy?.name || q.createdBy?.email || "Unknown",
+            new Date(q.createdAt).toLocaleString(),
+          ]),
+        });
+      }
+
       // Add footer on every page.
       const pageCount = doc.getNumberOfPages();
       const pageWidth = doc.internal.pageSize.getWidth();
@@ -328,13 +350,6 @@ export default function AdminDashboard() {
                 </p>
               </div>
               <div className="summary-actions flex gap-2">
-                <button
-                  type="button"
-                  className="row-btn quiz-btn rounded-xl bg-sky-400 px-5 py-2 text-sm font-bold text-slate-950 transition hover:bg-sky-300"
-                  onClick={() => navigate('/admin/quiz/create')}
-                >
-                  Create Quiz
-                </button>
                 <button
                   type="button"
                   className="row-btn logout-btn rounded-xl bg-rose-300 px-5 py-2 text-sm font-bold text-slate-950 transition hover:bg-rose-200"
@@ -698,7 +713,16 @@ export default function AdminDashboard() {
                         Review, update, or remove quizzes created by admins.
                       </p>
                     </div>
-                    <span>{quizzes.length} total</span>
+                    <div className="flex items-center gap-4">
+                      <span>{quizzes.length} total</span>
+                      <button
+                        type="button"
+                        className="antigravity-create-btn"
+                        onClick={() => navigate('/admin/quiz/create')}
+                      >
+                        + Create Quiz
+                      </button>
+                    </div>
                   </div>
                   <div className="table-scroll">
                     <table>

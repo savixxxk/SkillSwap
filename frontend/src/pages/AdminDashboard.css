@@ -1310,3 +1310,27 @@ tbody tr:hover {
   border: 1px solid rgba(96, 165, 250, 0.18);
   color: #e2e8f0;
 }
+
+@keyframes buttonFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-3px); }
+}
+
+.antigravity-create-btn {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: bold;
+  box-shadow: 0 4px 20px rgba(99,102,241,0.5);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: buttonFloat 3s ease-in-out infinite;
+}
+
+.antigravity-create-btn:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 6px 25px rgba(99,102,241,0.7);
+}
