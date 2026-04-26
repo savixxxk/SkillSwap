@@ -190,18 +190,18 @@ export default function AdminQuizCreation() {
                 </div>
 
                 <div className="form-group">
-                  <label className="mb-2 block text-sm font-semibold text-[#e2e8f0]">Question Text *</label>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">Question Text *</label>
                   <textarea
                     value={question.questionText}
                     onChange={(e) => handleQuestionChange(qIndex, 'questionText', e.target.value)}
                     placeholder="Enter question text"
-                    className="bg-gray-700 text-white placeholder-gray-400 border border-gray-600 rounded-lg px-4 py-3 w-full"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 focus:border-sky-500 focus:outline-none"
                     required
                   />
                 </div>
 
                 <div className="options-container mt-3">
-                  <label className="mb-2 block text-sm font-semibold text-[#e2e8f0]">Options (select correct answer) *</label>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">Options (select correct answer) *</label>
                   {question.options.map((option, oIndex) => (
                     <div key={oIndex} className="option-input mb-2 flex flex-wrap items-center gap-3">
                       <input
@@ -209,10 +209,10 @@ export default function AdminQuizCreation() {
                         value={option}
                         onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)}
                         placeholder={`Option ${oIndex + 1}`}
-                        className="flex-1 min-w-[220px] bg-gray-700 text-white placeholder-gray-400 border border-gray-600 rounded-lg px-4 py-2"
+                        className="flex-1 min-w-[220px] rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 placeholder-slate-400 focus:border-sky-500 focus:outline-none"
                         required
                       />
-                      <label className="radio-label inline-flex items-center gap-2 text-sm text-slate-200">
+                      <label className="radio-label inline-flex items-center gap-2 text-sm text-slate-700">
                         <input
                           type="radio"
                           name={`correct-${qIndex}`}
